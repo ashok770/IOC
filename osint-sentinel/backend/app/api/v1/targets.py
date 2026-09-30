@@ -4,11 +4,13 @@ from sqlalchemy.orm import Session
 
 from database.session import get_db
 from app.schemas.target import TargetCreate, TargetResponse, TargetListResponse
+from app.schemas.asset import AssetResponse, AssetListResponse
 from app.schemas.evidence import EvidenceListResponse, EvidenceResponse
 from app.schemas.finding import FindingListResponse, FindingResponse
 from app.schemas.collection import CollectionSummaryResponse
 from app.services.target_service import TargetService
 from app.services.collection_service import CollectionService
+from app.services.asset_service import AssetService
 
 router = APIRouter(prefix="/v1/targets", tags=["Targets & Scoping"])
 
@@ -141,3 +143,73 @@ def get_target_findings(
         total=total,
         target_id=target_id,
     )
+
+
+@router.get(
+    "/{target_id}/assets",
+    response_model=AssetListResponse,
+    summary="List Discovered Assets for Target",
+)
+def get_target_assets(
+    target_id: str,
+    asset_type: Optional[str] = Query(
+        None,
+        description="Filter by asset_type (domain, subdomain, ip, certificate_associated_hostname)",
+    ),
+    skip: int = Query(0, ge=0, description="Offset"),
+    limit: int = Query(100, ge=1, le=500, description="Page limit"),
+    db: Session = Depends(get_db),
+) -> AssetListResponse:
+    """
+    Query normalized assets (Domain, Subdomain, IP, Certificate-associated hostname)
+    cataloged under an authorized assessment target.
+    """
+    target = TargetService.get_target_by_id(db=db, target_id=target_id)
+    if not target:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Target with ID '{target_id}' not found.",
+        )
+
+    items, total = AssetService.list_assets(
+        db=db,
+        target_id=target_id,
+        asset_type=asset_type,
+        skip=skip,
+        limit=limit,
+    )
+    return AssetListResponse(
+        items=[AssetResponse.model_validate(a) for a in items],
+        total=total,
+        target_id=target_id,
+        asset_type_filter=asset_type,
+        limit=limit,
+        offset=skip,
+    )
+
+
+@router.get(
+    "/{target_id}/assets/{asset_id}",
+    response_model=AssetResponse,
+    summary="Get Specific Asset by ID",
+)
+def get_target_asset_by_id(
+    target_id: str,
+    asset_id: str,
+    db: Session = Depends(get_db),
+) -> AssetResponse:
+    """Retrieve details for a specific asset belonging to a target."""
+    target = TargetService.get_target_by_id(db=db, target_id=target_id)
+    if not target:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Target with ID '{target_id}' not found.",
+        )
+
+    asset = AssetService.get_asset_by_id(db=db, target_id=target_id, asset_id=asset_id)
+    if not asset:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Asset with ID '{asset_id}' not found under target '{target_id}'.",
+        )
+    return AssetResponse.model_validate(asset)

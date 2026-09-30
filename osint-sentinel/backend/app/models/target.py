@@ -25,6 +25,12 @@ class Target(Base):
     )
 
     # Relationships
+    assets = relationship(
+        "Asset",
+        back_populates="target",
+        cascade="all, delete-orphan",
+        order_by="Asset.discovered_at.desc()",
+    )
     evidence_items = relationship(
         "EvidenceItem",
         back_populates="target",

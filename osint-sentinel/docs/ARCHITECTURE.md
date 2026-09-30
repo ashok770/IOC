@@ -44,6 +44,29 @@ backend/
 4. **`database/`**:
    - Resilience: Database connections are lazily initialized. Failure to reach the database during development or offline assessment does not prevent API bootstrap.
 
+## Domain Entity Hierarchy
+
+The platform organizes exposure intelligence across three distinct conceptual tiers under each authorized `Target`:
+
+```
+Target
+  │
+  ├── Assets
+  │     ├── Domain (Primary authorized target domain)
+  │     ├── Subdomain / Hostname (MX, NS, CNAME targets within scope)
+  │     ├── IP (Resolved public IPv4/IPv6 addresses)
+  │     └── Certificate-associated hostname (SANs and hostnames from CT logs)
+  │
+  ├── Evidence (Raw verifiable artifacts: DNS records, RDAP payloads, CT log entries)
+  │
+  └── Findings (Deterministic, explainable factual observations referencing evidence)
+```
+
+- **`Target`**: The root boundary for an authorized assessment scope.
+- **`Assets`**: Discovered, deduplicated perimeter attack surface elements extracted from verified evidence.
+- **`Evidence`**: Unmodified provenance records maintaining exact raw source payloads and collection timestamps.
+- **`Findings`**: Factual architectural observations and verified security exposure signals.
+
 ## Operational Constraints
 
 | Constraint | Enforcement Mechanism |

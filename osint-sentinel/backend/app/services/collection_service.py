@@ -73,13 +73,21 @@ class CollectionService:
             # Map evidence type to first evidence ID for provenance linking
             evidence_type_map = {e.evidence_type: e.id for e in evidence_entities}
 
-            # 3. Execute Factual Observations Analysis
+            # 3. Extract, classify, and sync Assets under Target
+            from app.services.asset_service import AssetService
+            cataloged_assets = AssetService.extract_and_sync_assets(
+                db=db,
+                target=target,
+                evidence_items=evidence_entities,
+            )
+
+            # 4. Execute Factual Observations Analysis
             findings = self.domain_analyzer.analyze(
                 target.primary_domain,
                 collector_result.evidence_results,
             )
 
-            # 4. Persist Findings
+            # 5. Persist Findings
             findings_count = 0
             for f in findings:
                 evidence_id = evidence_type_map.get(f.evidence_type) if f.evidence_type else None
@@ -115,6 +123,7 @@ class CollectionService:
                 status=target.assessment_status,
                 sources=collector_result.sources_status,
                 evidence_items_created=len(evidence_entities),
+                assets_discovered=len(cataloged_assets),
                 findings_created=findings_count,
                 timestamp=datetime.now(timezone.utc),
             )

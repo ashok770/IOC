@@ -12,6 +12,7 @@ class CollectionSummaryResponse(BaseModel):
         description="Per-source execution status (e.g. {'dns': 'success', 'rdap': 'success', 'certificate_transparency': 'success'})",
     )
     evidence_items_created: int = Field(..., description="Number of new evidence items saved")
+    assets_discovered: int = Field(0, description="Total unique assets cataloged under the target")
     findings_created: int = Field(0, description="Number of factual observation findings produced")
     timestamp: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
