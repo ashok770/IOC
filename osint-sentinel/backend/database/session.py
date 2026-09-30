@@ -53,3 +53,19 @@ def check_db_connection() -> Tuple[bool, str]:
     except Exception as err:
         logger.warning(f"Unexpected error probing database: {err}")
         return False, f"Unexpected error: {str(err)}"
+
+
+def init_db() -> bool:
+    """
+    Initializes database tables if connection is available.
+    Safe to execute multiple times (idempotent).
+    """
+    try:
+        # Import models to ensure they are registered on Base.metadata
+        import app.models  # noqa: F401
+        Base.metadata.create_all(bind=engine)
+        logger.info("Database tables initialized successfully.")
+        return True
+    except Exception as err:
+        logger.error(f"Failed to initialize database tables: {err}")
+        return False

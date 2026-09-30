@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
 from app.api.router import api_router
-from database.session import check_db_connection
+from database.session import check_db_connection, init_db
 
 logging.basicConfig(
     level=logging.INFO,
@@ -31,6 +31,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     connected, message = check_db_connection()
     if connected:
         logger.info(f"Database status: {message}")
+        init_db()
     else:
         logger.warning(
             f"Database not available at startup ({message}). Server starting in offline-database mode."

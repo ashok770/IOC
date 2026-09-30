@@ -72,17 +72,22 @@ The platform enforces strict guardrails:
 
 ## 4. Current Development Phase
 
-- [x] **Phase 1: Foundation (Current)**
+- [x] **Phase 1: Foundation**
   - Repository structure and package modularization.
   - FastAPI application bootstrap with CORS and lifecycle management.
   - Configuration management via Pydantic Settings and environment variables.
   - Resilient PostgreSQL database configuration layer (graceful offline behavior).
   - Health check endpoint (`GET /api/health`) with automated test coverage.
-- [ ] **Phase 2: Target Scoping & Data Modeling**
-  - Assessment scope models, target validation, and domain verification.
-  - PostgreSQL schema migrations for targets, assets, evidence, and findings.
-- [ ] **Phase 3: Passive Intelligence Collectors**
-  - Public DNS record collector, Certificate Transparency collector, HTTP security header inspector.
+- [x] **Phase 2: Target Registration & Passive Domain Intelligence (Current)**
+  - SQLAlchemy models for Target, EvidenceItem, and Finding with foreign keys.
+  - Strict domain validation and normalization (rejection of URLs, paths, ports, and IPs).
+  - Target registration and retrieval endpoints (`POST /api/v1/targets`, `GET /api/v1/targets`).
+  - Modular passive collectors: DNS (A, AAAA, MX, NS, TXT, CNAME, SOA), RDAP, Certificate Transparency (crt.sh).
+  - Factual architectural analyzer (no speculative vulnerabilities).
+  - Collection execution and evidence inspection endpoints (`POST .../collect/domain`, `GET .../evidence`, `GET .../findings`).
+  - 24 automated unit and integration tests with mocked external OSINT calls.
+- [ ] **Phase 3: Expanded Intelligence & Perimeter Inspection**
+  - HTTP security header inspector, TLS certificate deep analysis, dangling DNS exposure detection.
 - [ ] **Phase 4: Correlation & Exposure Risk Engine**
   - Deterministic risk assessment and evidentiary graph linking.
 - [ ] **Phase 5: Frontend Dashboard & Executive Reporting**
