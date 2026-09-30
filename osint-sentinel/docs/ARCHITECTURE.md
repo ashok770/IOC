@@ -46,7 +46,7 @@ backend/
 
 ## Domain Entity Hierarchy
 
-The platform organizes exposure intelligence across three distinct conceptual tiers under each authorized `Target`:
+The platform organizes exposure intelligence across distinct conceptual tiers under each authorized `Target`:
 
 ```
 Target
@@ -57,15 +57,31 @@ Target
   │     ├── IP (Resolved public IPv4/IPv6 addresses)
   │     └── Certificate-associated hostname (SANs and hostnames from CT logs)
   │
-  ├── Evidence (Raw verifiable artifacts: DNS records, RDAP payloads, CT log entries)
+  ├── Technologies (Observable tech stack indicators linked to assets & evidence)
+  │     ├── Web Server (Nginx, Apache, IIS, Caddy, OpenResty)
+  │     ├── Application Framework (PHP, Express, ASP.NET, Next.js)
+  │     ├── Content Management System (WordPress, Drupal, Joomla, Shopify)
+  │     ├── CDN & Edge Cloud (Cloudflare, CloudFront, Fastly, Akamai)
+  │     └── Email Infrastructure (Google Workspace, Microsoft 365, Proofpoint)
+  │
+  ├── Evidence (Raw verifiable artifacts: DNS records, RDAP payloads, CT log entries, HTTP response headers)
   │
   └── Findings (Deterministic, explainable factual observations referencing evidence)
 ```
 
 - **`Target`**: The root boundary for an authorized assessment scope.
 - **`Assets`**: Discovered, deduplicated perimeter attack surface elements extracted from verified evidence.
-- **`Evidence`**: Unmodified provenance records maintaining exact raw source payloads and collection timestamps.
+- **`Technologies`**: Publicly observable technology indicators associated with specific assets, preserving exact version strings (when directly observable) and provenance links to source evidence.
+- **`Evidence`**: Unmodified provenance records maintaining exact raw source payloads, response headers, and collection timestamps.
 - **`Findings`**: Factual architectural observations and verified security exposure signals.
+
+### Technology Confidence Methodology
+
+Technology detection adheres to a deterministic, conservative policy:
+- **0.95 - 1.0 (High Confidence)**: Direct, explicit headers (e.g. `Server: Apache/2.4.52`, `X-Powered-By: PHP/8.1`, `cf-ray`).
+- **0.85 - 0.90 (Moderate-High Confidence)**: Distinctive vendor response markers (e.g. `X-Shopify-Stage`) or explicit generator headers.
+- **0.80 - 0.85 (Moderate Confidence)**: Non-executable HTML generator meta tags (e.g. `<meta name="generator" content="WordPress 6.4.2">`).
+- **Unknown / Insufficient Evidence**: If observed indicators are absent, generic, or ambiguous, no technology record is created. Guesses, speculative inferences, and unevidenced versions are strictly forbidden.
 
 ## Operational Constraints
 

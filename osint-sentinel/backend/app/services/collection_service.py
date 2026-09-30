@@ -81,14 +81,22 @@ class CollectionService:
                 evidence_items=evidence_entities,
             )
 
-            # 4. Execute Factual Observations Analysis
+            # 4. Extract, classify, and sync Technologies under Target & Assets
+            from app.services.technology_service import TechnologyService
+            cataloged_technologies = TechnologyService.extract_and_sync_technologies(
+                db=db,
+                target=target,
+                evidence_items=evidence_entities,
+                assets=cataloged_assets,
+            )
+
+            # 5. Execute Factual Observations Analysis
             findings = self.domain_analyzer.analyze(
                 target.primary_domain,
                 collector_result.evidence_results,
             )
 
-            # 5. Persist Findings
-            findings_count = 0
+            # 6. Persist Findings
             for f in findings:
                 evidence_id = evidence_type_map.get(f.evidence_type) if f.evidence_type else None
                 finding_record = Finding(
@@ -101,7 +109,31 @@ class CollectionService:
                     evidence_id=evidence_id,
                 )
                 db.add(finding_record)
-                findings_count += 1
+
+            db.commit()
+
+            # 7. Build Semantic Relationships
+            from app.services.correlation_service import CorrelationService
+            created_relationships = CorrelationService.build_and_sync_relationships(
+                db=db,
+                target=target,
+                assets=cataloged_assets,
+                evidence_items=evidence_entities,
+                technologies=cataloged_technologies,
+            )
+
+            # 8. Evaluate Exposure Signals (persists signals and corresponding informational findings)
+            created_signals = CorrelationService.evaluate_and_sync_exposure_signals(
+                db=db,
+                target=target,
+                assets=cataloged_assets,
+                technologies=cataloged_technologies,
+                relationships=created_relationships,
+            )
+
+            # 9. Compute Deterministic Risk Assessment & Asset Prioritization
+            from app.services.risk_service import RiskService
+            RiskService.compute_and_save_target_risk(db=db, target_id=target.id)
 
             # Determine overall assessment status
             has_failures = any(s == "failed" for s in collector_result.sources_status.values())
@@ -117,6 +149,8 @@ class CollectionService:
             db.commit()
             db.refresh(target)
 
+            total_findings = db.query(func.count(Finding.id)).filter(Finding.target_id == target.id).scalar() or 0
+
             return CollectionSummaryResponse(
                 target_id=target.id,
                 domain=target.primary_domain,
@@ -124,7 +158,10 @@ class CollectionService:
                 sources=collector_result.sources_status,
                 evidence_items_created=len(evidence_entities),
                 assets_discovered=len(cataloged_assets),
-                findings_created=findings_count,
+                technologies_discovered=len(cataloged_technologies),
+                relationships_mapped=len(created_relationships),
+                exposure_signals_identified=len(created_signals),
+                findings_created=total_findings,
                 timestamp=datetime.now(timezone.utc),
             )
 

@@ -43,6 +43,36 @@ class Target(Base):
         cascade="all, delete-orphan",
         order_by="Finding.created_at.desc()",
     )
+    technologies = relationship(
+        "Technology",
+        back_populates="target",
+        cascade="all, delete-orphan",
+        order_by="Technology.created_at.desc()",
+    )
+    relationships = relationship(
+        "Relationship",
+        back_populates="target",
+        cascade="all, delete-orphan",
+        order_by="Relationship.created_at.desc()",
+    )
+    exposure_signals = relationship(
+        "ExposureSignal",
+        back_populates="target",
+        cascade="all, delete-orphan",
+        order_by="ExposureSignal.created_at.desc()",
+    )
+    risk_assessment = relationship(
+        "RiskAssessment",
+        back_populates="target",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+    asset_risk_scores = relationship(
+        "AssetRiskScore",
+        back_populates="target",
+        cascade="all, delete-orphan",
+        order_by="AssetRiskScore.priority_score.desc()",
+    )
 
     def __repr__(self) -> str:
         return f"<Target(id={self.id}, domain={self.primary_domain}, status={self.assessment_status})>"

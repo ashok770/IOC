@@ -2,6 +2,7 @@ from collectors.base import BaseCollector, CollectorResult, CollectorExecutionRe
 from collectors.dns import DNSCollector
 from collectors.rdap import RDAPCollector
 from collectors.certificates import CertificateTransparencyCollector
+from collectors.http import HTTPHeaderCollector
 from collectors.domain_collector import DomainIntelligenceCollector, DomainCollectionResult
 
 __all__ = [
@@ -11,6 +12,7 @@ __all__ = [
     "DNSCollector",
     "RDAPCollector",
     "CertificateTransparencyCollector",
+    "HTTPHeaderCollector",
     "DomainIntelligenceCollector",
     "DomainCollectionResult",
 ]

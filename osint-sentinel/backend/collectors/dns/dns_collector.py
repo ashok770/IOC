@@ -71,7 +71,7 @@ class DNSCollector(BaseCollector):
                     )
             except dns.resolver.NXDOMAIN:
                 logger.info(f"Domain {domain} does not exist (NXDOMAIN)")
-                break  # If domain doesn't exist, no other records will exist
+                return []  # Non-existent domain has no records
             except (dns.resolver.NoAnswer, dns.resolver.NoNameservers):
                 continue
             except dns.exception.Timeout:
@@ -80,6 +80,37 @@ class DNSCollector(BaseCollector):
             except Exception as e:
                 logger.warning(f"Error querying {record_type} for {domain}: {e}")
                 continue
+
+        # Explicitly query DMARC TXT record at _dmarc.<domain>
+        dmarc_target = f"_dmarc.{domain}"
+        try:
+            dmarc_answers = resolver.resolve(dmarc_target, "TXT")
+            for rdata in dmarc_answers:
+                val = rdata.to_text().strip('"')
+                if "v=dmarc1" in val.lower():
+                    parsed_data = {
+                        "domain": dmarc_target,
+                        "record_type": "TXT",
+                        "ttl": dmarc_answers.rrset.ttl if dmarc_answers.rrset else None,
+                        "value": val,
+                        "subdomain_type": "dmarc",
+                    }
+                    results.append(
+                        CollectorResult(
+                            evidence_type="dns_record",
+                            source="DNS",
+                            source_url=None,
+                            data=parsed_data,
+                            confidence=1.0,
+                            notes=f"Resolved public DMARC TXT record for {dmarc_target}",
+                        )
+                    )
+        except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN, dns.resolver.NoNameservers):
+            pass
+        except dns.exception.Timeout:
+            logger.warning(f"DNS query timed out for DMARC at {dmarc_target}")
+        except Exception as e:
+            logger.warning(f"Error querying DMARC at {dmarc_target}: {e}")
 
         return results
 

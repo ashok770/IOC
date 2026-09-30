@@ -136,11 +136,12 @@ def test_full_collection_and_evidence_flow(client: TestClient):
     assert "dns" in categories
     assert "mail" in categories
     assert "infrastructure" in categories
+    assert "technology" in categories
 
     # All findings must be factual 'info' observations
     for f in findings_data["items"]:
         assert f["severity"] == "info"
-        assert f["confidence"] == 1.0
+        assert 0.0 < f["confidence"] <= 1.0
 
 
 def test_collection_target_not_found(client: TestClient):

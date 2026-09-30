@@ -5,12 +5,20 @@ from sqlalchemy.orm import Session
 from database.session import get_db
 from app.schemas.target import TargetCreate, TargetResponse, TargetListResponse
 from app.schemas.asset import AssetResponse, AssetListResponse
+from app.schemas.technology import TechnologyResponse, TechnologyListResponse
 from app.schemas.evidence import EvidenceListResponse, EvidenceResponse
 from app.schemas.finding import FindingListResponse, FindingResponse
 from app.schemas.collection import CollectionSummaryResponse
+from app.schemas.relationship import RelationshipResponse, RelationshipListResponse
+from app.schemas.exposure_signal import ExposureSignalResponse, ExposureSignalListResponse
+from app.schemas.analysis import AnalysisSummaryResponse
+from app.schemas.risk import RiskAssessmentResponse, AssetRiskScoreResponse, AssetRiskScoreListResponse
 from app.services.target_service import TargetService
 from app.services.collection_service import CollectionService
 from app.services.asset_service import AssetService
+from app.services.technology_service import TechnologyService
+from app.services.correlation_service import CorrelationService
+from app.services.risk_service import RiskService
 
 router = APIRouter(prefix="/v1/targets", tags=["Targets & Scoping"])
 
@@ -213,3 +221,178 @@ def get_target_asset_by_id(
             detail=f"Asset with ID '{asset_id}' not found under target '{target_id}'.",
         )
     return AssetResponse.model_validate(asset)
+
+
+@router.get(
+    "/{target_id}/technologies",
+    response_model=TechnologyListResponse,
+    summary="List Detected Technologies for Target",
+)
+def get_target_technologies(
+    target_id: str,
+    asset_id: Optional[str] = Query(None, description="Filter by associated asset ID"),
+    category: Optional[str] = Query(
+        None,
+        description="Filter by category (web_server, framework, cms, cdn, cloud, email, other)",
+    ),
+    skip: int = Query(0, ge=0, description="Offset"),
+    limit: int = Query(100, ge=1, le=500, description="Page limit"),
+    db: Session = Depends(get_db),
+) -> TechnologyListResponse:
+    """
+    Query observable technology indicators cataloged under an authorized target.
+    Supports filtering by asset_id, category, and pagination.
+    """
+    items, total = TechnologyService.list_target_technologies(
+        db=db,
+        target_id=target_id,
+        asset_id=asset_id,
+        category=category,
+        skip=skip,
+        limit=limit,
+    )
+    return TechnologyListResponse(
+        items=[TechnologyResponse.model_validate(t) for t in items],
+        total=total,
+        target_id=target_id,
+        asset_id=asset_id,
+        category_filter=category,
+        limit=limit,
+        offset=skip,
+    )
+
+
+@router.get(
+    "/{target_id}/relationships",
+    response_model=RelationshipListResponse,
+    summary="List Semantic Graph Relationships for Target",
+)
+def get_target_relationships(
+    target_id: str,
+    relationship_type: Optional[str] = Query(None, description="Filter by relationship_type"),
+    source_type: Optional[str] = Query(None, description="Filter by source_type (target, asset, technology, evidence)"),
+    target_type: Optional[str] = Query(None, description="Filter by target_type (asset, technology, evidence, external_entity)"),
+    skip: int = Query(0, ge=0, description="Offset"),
+    limit: int = Query(100, ge=1, le=500, description="Page limit"),
+    db: Session = Depends(get_db),
+) -> RelationshipListResponse:
+    """Query semantic graph relationships mapped under an authorized target."""
+    items, total = CorrelationService.list_target_relationships(
+        db=db,
+        target_id=target_id,
+        relationship_type=relationship_type,
+        source_type=source_type,
+        target_type=target_type,
+        skip=skip,
+        limit=limit,
+    )
+    return RelationshipListResponse(
+        items=[RelationshipResponse.model_validate(r) for r in items],
+        total=total,
+        target_id=target_id,
+        relationship_type_filter=relationship_type,
+        source_type_filter=source_type,
+        target_type_filter=target_type,
+        limit=limit,
+        offset=skip,
+    )
+
+
+@router.get(
+    "/{target_id}/exposure-signals",
+    response_model=ExposureSignalListResponse,
+    summary="List Exposure Signals for Target",
+)
+def get_target_exposure_signals(
+    target_id: str,
+    category: Optional[str] = Query(None, description="Filter by category"),
+    confidence: Optional[float] = Query(None, ge=0.0, le=1.0, description="Filter by minimum confidence"),
+    skip: int = Query(0, ge=0, description="Offset"),
+    limit: int = Query(100, ge=1, le=500, description="Page limit"),
+    db: Session = Depends(get_db),
+) -> ExposureSignalListResponse:
+    """Query factual security-relevant exposure signals identified under a target."""
+    items, total = CorrelationService.list_target_exposure_signals(
+        db=db,
+        target_id=target_id,
+        category=category,
+        min_confidence=confidence,
+        skip=skip,
+        limit=limit,
+    )
+    return ExposureSignalListResponse(
+        items=[ExposureSignalResponse.model_validate(s) for s in items],
+        total=total,
+        target_id=target_id,
+        category_filter=category,
+        min_confidence=confidence,
+        limit=limit,
+        offset=skip,
+    )
+
+
+@router.get(
+    "/{target_id}/analysis/summary",
+    response_model=AnalysisSummaryResponse,
+    summary="Get Analyst-Oriented Exposure & Inventory Summary",
+)
+def get_analysis_summary(
+    target_id: str,
+    db: Session = Depends(get_db),
+) -> AnalysisSummaryResponse:
+    """Retrieve deterministic counts of assets, technologies, evidence, relationships, signals, and findings."""
+    return CorrelationService.get_analysis_summary(db=db, target_id=target_id)
+
+
+@router.get(
+    "/{target_id}/risk",
+    response_model=RiskAssessmentResponse,
+    summary="Get Target External Risk Assessment",
+)
+def get_target_risk(
+    target_id: str,
+    db: Session = Depends(get_db),
+) -> RiskAssessmentResponse:
+    """
+    Retrieve explainable, deterministic external risk posture assessment for an authorized target.
+    Computed from verified configurations, email defenses, technology disclosures, and exposure signals.
+    """
+    assessment = RiskService.get_target_risk(db=db, target_id=target_id)
+    return RiskAssessmentResponse.model_validate(assessment)
+
+
+@router.get(
+    "/{target_id}/risk/assets",
+    response_model=AssetRiskScoreListResponse,
+    summary="List Prioritized Assets for Target",
+)
+def list_target_asset_priorities(
+    target_id: str,
+    priority_level: Optional[str] = Query(
+        None,
+        description="Filter by priority level: p1_urgent, p2_high, p3_medium, p4_low",
+    ),
+    skip: int = Query(0, ge=0, description="Offset"),
+    limit: int = Query(100, ge=1, le=500, description="Page limit"),
+    db: Session = Depends(get_db),
+) -> AssetRiskScoreListResponse:
+    """
+    Retrieve prioritized list of perimeter assets ranked by exposure impact (P1 urgent to P4 low).
+    """
+    items, total = RiskService.list_asset_priorities(
+        db=db,
+        target_id=target_id,
+        priority_level=priority_level,
+        skip=skip,
+        limit=limit,
+    )
+    return AssetRiskScoreListResponse(
+        items=[AssetRiskScoreResponse(**item) for item in items],
+        total=total,
+        target_id=target_id,
+        priority_level_filter=priority_level,
+        limit=limit,
+        offset=skip,
+    )
+
+

@@ -78,20 +78,26 @@ The platform enforces strict guardrails:
   - Configuration management via Pydantic Settings and environment variables.
   - Resilient PostgreSQL database configuration layer (graceful offline behavior).
   - Health check endpoint (`GET /api/health`) with automated test coverage.
-- [x] **Phase 2: Target Registration & Passive Domain Intelligence (Current)**
+- [x] **Phase 2: Target Registration & Passive Domain Intelligence**
   - SQLAlchemy models for Target, EvidenceItem, and Finding with foreign keys.
   - Strict domain validation and normalization (rejection of URLs, paths, ports, and IPs).
   - Target registration and retrieval endpoints (`POST /api/v1/targets`, `GET /api/v1/targets`).
   - Modular passive collectors: DNS (A, AAAA, MX, NS, TXT, CNAME, SOA), RDAP, Certificate Transparency (crt.sh).
   - Factual architectural analyzer (no speculative vulnerabilities).
   - Collection execution and evidence inspection endpoints (`POST .../collect/domain`, `GET .../evidence`, `GET .../findings`).
-  - 24 automated unit and integration tests with mocked external OSINT calls.
-- [ ] **Phase 3: Expanded Intelligence & Perimeter Inspection**
-  - HTTP security header inspector, TLS certificate deep analysis, dangling DNS exposure detection.
-- [ ] **Phase 4: Correlation & Exposure Risk Engine**
-  - Deterministic risk assessment and evidentiary graph linking.
-- [ ] **Phase 5: Frontend Dashboard & Executive Reporting**
-  - React/Vite interface and downloadable assessment reports.
+- [x] **Phase 3: Passive Asset Discovery & Asset Inventory**
+  - Dedicated Asset data model and PostgreSQL persistence.
+  - Asset extraction from verified evidence (Domain, Subdomain/Hostname, IP, Certificate-associated hostname).
+  - Asset inventory API endpoints (`GET /api/v1/targets/{id}/assets`, filtering by `asset_type`).
+- [x] **Phase 4: Modular Technology Intelligence Layer (Current)**
+  - Dedicated Technology model with full provenance linking to Evidence and Asset.
+  - Conservative, deterministic signature detector across web servers, frameworks, CMSs, CDNs, and mail providers.
+  - Strict version extraction rules (no speculative versioning) and documented confidence scoring policy.
+  - Technology API endpoints (`GET /api/v1/targets/{id}/technologies`, `GET /api/v1/assets/{id}/technologies`).
+  - Informational findings generation (`severity="info"`) without CVEs or vulnerability scores.
+  - 33 automated unit and integration tests with zero live dependencies.
+- [ ] **Phase 5: Exposure Risk Engine & Executive Reporting**
+  - Deterministic risk assessment and downloadable assessment reports.
 
 ---
 

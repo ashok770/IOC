@@ -50,6 +50,24 @@ class Asset(Base):
     # Relationships
     target = relationship("Target", back_populates="assets")
     first_evidence = relationship("EvidenceItem", foreign_keys=[first_evidence_id])
+    technologies = relationship(
+        "Technology",
+        back_populates="asset",
+        cascade="all, delete-orphan",
+        order_by="Technology.created_at.desc()",
+    )
+    exposure_signals = relationship(
+        "ExposureSignal",
+        back_populates="asset",
+        cascade="all, delete-orphan",
+        order_by="ExposureSignal.created_at.desc()",
+    )
+    risk_score = relationship(
+        "AssetRiskScore",
+        back_populates="asset",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
 
     def __repr__(self) -> str:
         return f"<Asset(id={self.id}, type={self.asset_type}, value='{self.value}')>"
