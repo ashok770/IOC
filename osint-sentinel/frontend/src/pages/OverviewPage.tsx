@@ -1,87 +1,157 @@
-import React from 'react';
-import { useOutletContext } from 'react-router-dom';
-import { PageContainer, PageHeader, StatusBadge } from '../components/common';
-import { Target } from '../types';
-
-interface OutletContextType {
-  activeTarget: Target | null;
-}
+import React, { useEffect, useState, useCallback } from 'react';
+import { useTarget } from '../context/TargetContext';
+import { targetApi, riskApi, exposureApi, assetApi } from '../api';
+import {
+  AnalysisSummary,
+  RiskAssessment,
+  ExposureSignal,
+  Asset,
+} from '../types';
+import { PageContainer, EmptyState, ErrorState } from '../components/common';
+import {
+  AssessmentHeader,
+  CollectionBanner,
+  ExposureAssessmentCard,
+  FactorBreakdownCard,
+  IntelligenceMetricsGrid,
+  PriorityInvestigationList,
+  AssetSummaryList,
+  AssessmentIntegrityCard,
+} from '../components/overview';
 
 export const OverviewPage: React.FC = () => {
-  const { activeTarget } = useOutletContext<OutletContextType>();
+  const {
+    selectedTarget,
+    isLoadingTargets,
+    openCreateModal,
+    isCollectionRunning,
+    collectionSummary,
+    collectionError,
+    triggerCollection,
+  } = useTarget();
 
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'success';
-      case 'in_progress':
-        return 'cyan';
-      case 'partial':
-        return 'warning';
-      case 'failed':
-        return 'critical';
-      default:
-        return 'neutral';
+  const [summary, setSummary] = useState<AnalysisSummary | null>(null);
+  const [risk, setRisk] = useState<RiskAssessment | null>(null);
+  const [exposureSignals, setExposureSignals] = useState<ExposureSignal[]>([]);
+  const [assets, setAssets] = useState<Asset[]>([]);
+
+  const [isLoadingData, setIsLoadingData] = useState<boolean>(false);
+  const [dataError, setDataError] = useState<string | null>(null);
+
+  const loadOverviewData = useCallback(async (targetId: string) => {
+    setIsLoadingData(true);
+    setDataError(null);
+
+    try {
+      const [summaryRes, riskRes, signalsRes, assetsRes] = await Promise.all([
+        targetApi.getAnalysisSummary(targetId).catch(() => null),
+        riskApi.getTargetRisk(targetId).catch(() => null),
+        exposureApi.listExposureSignals(targetId).catch(() => ({ items: [] })),
+        assetApi.listTargetAssets(targetId).catch(() => ({ items: [] })),
+      ]);
+
+      setSummary(summaryRes);
+      setRisk(riskRes);
+      setExposureSignals(signalsRes?.items || []);
+      setAssets(assetsRes?.items || []);
+    } catch (err) {
+      setDataError(err instanceof Error ? err.message : 'Failed to retrieve assessment data from backend.');
+    } finally {
+      setIsLoadingData(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (selectedTarget?.id) {
+      loadOverviewData(selectedTarget.id);
+    } else {
+      setSummary(null);
+      setRisk(null);
+      setExposureSignals([]);
+      setAssets([]);
+    }
+  }, [selectedTarget?.id, loadOverviewData]);
+
+  const handleRunAssessment = async () => {
+    if (!selectedTarget) return;
+    const res = await triggerCollection(selectedTarget.id);
+    if (res) {
+      // Reload overview metrics after real collection completion
+      await loadOverviewData(selectedTarget.id);
     }
   };
 
+  if (isLoadingTargets && !selectedTarget) {
+    return (
+      <PageContainer>
+        <div className="state-box">
+          <div className="state-spinner" aria-hidden="true" />
+          <span className="state-title">Loading assessment scope...</span>
+        </div>
+      </PageContainer>
+    );
+  }
+
+  if (!selectedTarget) {
+    return (
+      <PageContainer>
+        <EmptyState
+          title="NO ASSESSMENT SELECTED"
+          message="Create a new authorized domain assessment target or select an existing target from the top bar to begin external posture analysis."
+          actionText="+ CREATE ASSESSMENT"
+          onAction={openCreateModal}
+        />
+      </PageContainer>
+    );
+  }
+
   return (
     <PageContainer>
-      <PageHeader
-        title="Security Exposure Overview"
-        subtitle="Executive external attack surface assessment and defensive posture telemetry."
-        badge={
-          activeTarget ? (
-            <StatusBadge
-              label={`STATUS: ${activeTarget.assessment_status}`}
-              variant={getStatusBadgeVariant(activeTarget.assessment_status)}
-            />
-          ) : (
-            <StatusBadge label="NO TARGET REGISTERED" variant="neutral" />
-          )
-        }
+      {/* Overview Assessment Header */}
+      <AssessmentHeader
+        target={selectedTarget}
+        onRunAssessment={handleRunAssessment}
+        isCollecting={isCollectionRunning}
       />
 
-      <div className="placeholder-card">
-        <StatusBadge label="CHECKPOINT 1 FOUNDATION" variant="violet" className="placeholder-badge" />
-        <h2 style={{ fontSize: 'var(--text-lg)', color: 'var(--color-text-primary)' }}>
-          Assessment Overview Foundation Established
-        </h2>
-        <p className="placeholder-desc">
-          The application shell, navigation, API client, and layout foundation are active.
-          The complete posture dashboard (including overall exposure scoring, category breakdowns,
-          and prioritized action items) will be implemented in subsequent checkpoints.
-        </p>
-        <p className="placeholder-desc" style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)' }}>
-          OSINT Sentinel adheres strictly to deterministic, explainable intelligence. Zero mock metrics,
-          simulated risk scores, or speculative vulnerabilities are fabricated.
-        </p>
+      {/* Real-time Collection Progress & Completion Banner */}
+      <CollectionBanner
+        isRunning={isCollectionRunning}
+        summary={collectionSummary}
+        error={collectionError}
+      />
 
-        {activeTarget && (
-          <div className="placeholder-meta-grid">
-            <div className="placeholder-meta-item">
-              <span className="placeholder-meta-label">Active Target Domain</span>
-              <span className="placeholder-meta-value">{activeTarget.primary_domain}</span>
-            </div>
-            <div className="placeholder-meta-item">
-              <span className="placeholder-meta-label">Organization</span>
-              <span className="placeholder-meta-value">{activeTarget.name || 'Unspecified'}</span>
-            </div>
-            <div className="placeholder-meta-item">
-              <span className="placeholder-meta-label">Target ID</span>
-              <span className="placeholder-meta-value" style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)' }}>
-                {activeTarget.id}
-              </span>
-            </div>
-            <div className="placeholder-meta-item">
-              <span className="placeholder-meta-label">Registered At</span>
-              <span className="placeholder-meta-value">
-                {new Date(activeTarget.created_at).toLocaleString()}
-              </span>
-            </div>
+      {dataError ? (
+        <ErrorState
+          title="Assessment Telemetry Unavailable"
+          message={dataError}
+          onRetry={() => selectedTarget && loadOverviewData(selectedTarget.id)}
+        />
+      ) : (
+        <>
+          {/* External Exposure Assessment & Contributing Factors */}
+          <div className="exposure-section-grid">
+            <ExposureAssessmentCard risk={risk} isLoading={isLoadingData} />
+            <FactorBreakdownCard risk={risk} isLoading={isLoadingData} />
           </div>
-        )}
-      </div>
+
+          {/* KPI Intelligence Counters */}
+          <IntelligenceMetricsGrid summary={summary} isLoading={isLoadingData} />
+
+          {/* Priority Investigation Triage */}
+          <PriorityInvestigationList
+            recommendations={risk?.recommendations || []}
+            exposureSignals={exposureSignals}
+            isLoading={isLoadingData}
+          />
+
+          {/* Discovered Perimeter Surface Summary */}
+          <AssetSummaryList assets={assets} isLoading={isLoadingData} />
+
+          {/* Assessment Integrity & Policy */}
+          <AssessmentIntegrityCard />
+        </>
+      )}
     </PageContainer>
   );
 };

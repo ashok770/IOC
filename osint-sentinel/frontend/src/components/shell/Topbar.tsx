@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { healthApi } from '../../api';
-import { HealthResponse, Target } from '../../types';
+import { HealthResponse } from '../../types';
+import { TargetSelector } from './TargetSelector';
+import { useTarget } from '../../context/TargetContext';
 
 interface TopbarProps {
   onToggleSidebar: () => void;
-  activeTarget: Target | null;
 }
 
-export const Topbar: React.FC<TopbarProps> = ({ onToggleSidebar, activeTarget }) => {
+export const Topbar: React.FC<TopbarProps> = ({ onToggleSidebar }) => {
+  const { openCreateModal } = useTarget();
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [isHealthLoading, setIsHealthLoading] = useState(true);
 
@@ -30,7 +32,6 @@ export const Topbar: React.FC<TopbarProps> = ({ onToggleSidebar, activeTarget })
     }
 
     checkHealth();
-    // Re-check periodically every 30s
     const timer = setInterval(checkHealth, 30000);
     return () => {
       isMounted = false;
@@ -68,18 +69,30 @@ export const Topbar: React.FC<TopbarProps> = ({ onToggleSidebar, activeTarget })
           </svg>
         </button>
 
-        {/* Current Assessment Target Context */}
-        <div className="target-context-chip" title="Current Active Assessment Target">
-          <span className="target-context-label">Target:</span>
-          <span className="target-context-domain">
-            {activeTarget ? activeTarget.primary_domain : 'No target selected'}
-          </span>
-        </div>
+        {/* Real Dynamic Target Selector */}
+        <TargetSelector />
       </div>
 
       <div className="topbar-right">
+        {/* Quick New Assessment Action */}
+        <button
+          type="button"
+          className="btn-primary"
+          style={{ padding: '4px 12px', fontSize: 'var(--text-xs)' }}
+          onClick={openCreateModal}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          + New Assessment
+        </button>
+
         {/* Real Backend / Database Health Status */}
-        <div className="health-status-indicator" title={health ? `Connected to ${health.project} (${health.environment})` : 'Backend service unreachable'}>
+        <div
+          className="health-status-indicator"
+          title={health ? `Connected to ${health.project} (${health.environment})` : 'Backend service unreachable'}
+        >
           <span className={`health-dot ${getStatusDotClass()}`} aria-hidden="true" />
           <span>{getStatusLabel()}</span>
         </div>

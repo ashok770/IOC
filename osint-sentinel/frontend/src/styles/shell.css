@@ -4,9 +4,10 @@
 
 .app-layout {
   display: flex;
-  min-height: 100vh;
+  height: 100%;
   width: 100%;
   background-color: var(--color-bg-base);
+  overflow: hidden;
 }
 
 /* ------------------------------------------------------------------------------
@@ -163,19 +164,19 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
-  min-height: 100vh;
+  height: 100%;
+  overflow: hidden;
 }
 
 .app-topbar {
   height: var(--topbar-height);
+  flex-shrink: 0;
   background-color: var(--color-bg-surface);
   border-bottom: 1px solid var(--color-border-subtle);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 var(--space-6);
-  position: sticky;
-  top: 0;
   z-index: 40;
 }
 
@@ -267,6 +268,9 @@
 
 .app-content {
   flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
 }
