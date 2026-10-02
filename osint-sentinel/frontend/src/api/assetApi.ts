@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import { Asset, AssetListResponse } from '../types';
+import { Asset, AssetListResponse, RelationshipListResponse } from '../types';
 
 export interface ListAssetParams {
   asset_type?: string;
@@ -31,4 +31,10 @@ export const assetApi = {
    */
   getAsset: (assetId: string) =>
     apiClient.get<Asset>(`/v1/assets/${assetId}`),
+
+  /**
+   * List semantic relationships involving this asset.
+   */
+  getAssetRelationships: (assetId: string) =>
+    apiClient.get<RelationshipListResponse>(`/v1/assets/${assetId}/relationships`),
 };

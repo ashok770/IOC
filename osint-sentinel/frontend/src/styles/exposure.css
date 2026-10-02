@@ -1,0 +1,402 @@
+/* ==============================================================================
+   OSINT Sentinel — Exposure Intelligence Styles
+   ============================================================================== */
+
+/* ------------------------------------------------------------------------------
+   Toolbar & Filters
+   ------------------------------------------------------------------------------ */
+.exposure-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  background-color: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4);
+}
+
+.exposure-toolbar-left {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  flex: 1;
+  min-width: 260px;
+}
+
+.exposure-search-wrapper {
+  position: relative;
+  flex: 1;
+  max-width: 360px;
+  min-width: 200px;
+}
+
+.exposure-search-icon {
+  position: absolute;
+  left: var(--space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-muted);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+}
+
+.exposure-search-input {
+  width: 100%;
+  padding: 6px var(--space-3) 6px 34px;
+  background-color: var(--color-bg-base);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  transition: all var(--transition-fast);
+}
+
+.exposure-search-input:focus {
+  outline: none;
+  border-color: var(--color-accent-cyan);
+  box-shadow: 0 0 0 1px var(--color-accent-cyan);
+}
+
+.exposure-search-clear {
+  position: absolute;
+  right: var(--space-2);
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 2px 6px;
+  font-size: 0.75rem;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.exposure-search-clear:hover {
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-surface-hover);
+}
+
+.exposure-filter-select {
+  padding: 6px var(--space-3);
+  background-color: var(--color-bg-surface-elevated);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.exposure-filter-select:hover {
+  background-color: var(--color-bg-surface-hover);
+  border-color: var(--color-border-strong);
+}
+
+.exposure-filter-select:focus {
+  outline: none;
+  border-color: var(--color-accent-cyan);
+}
+
+.exposure-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.exposure-count-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
+
+.exposure-count-number {
+  color: var(--color-accent-cyan);
+}
+
+.exposure-clear-btn {
+  background: none;
+  border: 1px dashed var(--color-border-subtle);
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.exposure-clear-btn:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-border-strong);
+  background-color: var(--color-bg-surface-hover);
+}
+
+/* ------------------------------------------------------------------------------
+   Signal Type Badges
+   ------------------------------------------------------------------------------ */
+.signal-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 7px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.signal-type-badge--remote {
+  background-color: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.signal-type-badge--dev {
+  background-color: var(--color-accent-violet-subtle);
+  color: var(--color-accent-violet);
+  border: 1px solid rgba(139, 92, 246, 0.25);
+}
+
+.signal-type-badge--tech {
+  background-color: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+}
+
+.signal-type-badge--dep {
+  background-color: var(--color-accent-cyan-subtle);
+  color: var(--color-accent-cyan);
+  border: 1px solid rgba(0, 200, 229, 0.25);
+}
+
+.signal-type-badge--default {
+  background-color: var(--color-bg-surface-elevated);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border-subtle);
+}
+
+/* ------------------------------------------------------------------------------
+   Exposure Inventory Table
+   ------------------------------------------------------------------------------ */
+.exposure-table-container {
+  background-color: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  overflow-x: auto;
+}
+
+.exposure-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.exposure-table th {
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--color-bg-surface-elevated);
+  border-bottom: 1px solid var(--color-border-subtle);
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.exposure-table th.sortable {
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.exposure-table th.sortable:hover {
+  color: var(--color-text-primary);
+}
+
+.exposure-table td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border-subtle);
+  font-size: var(--text-xs);
+  vertical-align: middle;
+}
+
+.exposure-row {
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.exposure-row:hover {
+  background-color: var(--color-bg-surface-hover);
+}
+
+.exposure-row.selected {
+  background-color: var(--color-accent-cyan-subtle);
+}
+
+.exposure-row:focus-visible {
+  outline: 2px solid var(--color-accent-cyan);
+  outline-offset: -2px;
+}
+
+.signal-title-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.signal-title-text {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  font-size: var(--text-xs);
+}
+
+.signal-desc-preview {
+  color: var(--color-text-secondary);
+  font-size: 0.72rem;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.signal-asset-cell {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  font-size: var(--text-xs);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.signal-asset-sub {
+  font-size: 0.65rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+}
+
+.signal-confidence-cell {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+.signal-date-cell {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------------------
+   Exposure Detail Drawer
+   ------------------------------------------------------------------------------ */
+.exposure-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
+  z-index: 90;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.exposure-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 500px;
+  max-width: 100vw;
+  background-color: var(--color-bg-surface);
+  border-left: 1px solid var(--color-border-strong);
+  box-shadow: var(--shadow-elevated);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  animation: drawerSlide 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.exposure-disclaimer-box {
+  background-color: var(--color-bg-surface-elevated);
+  border-left: 3px solid var(--color-accent-violet);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+.exposure-disclaimer-title {
+  font-weight: 700;
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 2px;
+}
+
+.exposure-action-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-accent-cyan);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-decoration: none;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+  margin-top: 4px;
+}
+
+.exposure-action-link:hover {
+  text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .exposure-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .exposure-toolbar-left {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .exposure-search-wrapper {
+    max-width: 100%;
+  }
+
+  .exposure-toolbar-right {
+    justify-content: space-between;
+  }
+
+  .exposure-drawer {
+    width: 100vw;
+  }
+}

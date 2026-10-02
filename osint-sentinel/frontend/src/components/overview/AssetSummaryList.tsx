@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Asset } from '../../types';
 
 interface AssetSummaryListProps {
@@ -10,6 +11,7 @@ export const AssetSummaryList: React.FC<AssetSummaryListProps> = ({
   assets,
   isLoading,
 }) => {
+  const navigate = useNavigate();
   const domains = assets.filter((a) => a.asset_type === 'domain');
   const subdomains = assets.filter((a) => a.asset_type === 'subdomain');
   const ips = assets.filter((a) => a.asset_type === 'ip');
@@ -17,13 +19,25 @@ export const AssetSummaryList: React.FC<AssetSummaryListProps> = ({
 
   return (
     <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-      <div>
-        <h2 style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
-          Discovered Perimeter Surface
-        </h2>
-        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)' }}>
-          Summary of unique perimeter assets cataloged under the authorized target scope.
-        </p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+        <div>
+          <h2 style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
+            Discovered Perimeter Surface
+          </h2>
+          <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)' }}>
+            Summary of unique perimeter assets cataloged under the authorized target scope.
+          </p>
+        </div>
+        <button
+          type="button"
+          className="btn-secondary"
+          style={{ padding: '4px 12px', fontSize: 'var(--text-xs)', display: 'flex', alignItems: 'center', gap: '6px' }}
+          onClick={() => navigate('/assets')}
+          title="Open Asset Intelligence inventory"
+        >
+          <span>VIEW ALL ASSETS</span>
+          <span aria-hidden="true">→</span>
+        </button>
       </div>
 
       {isLoading ? (

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { RiskRecommendation, ExposureSignal } from '../../types';
 import { StatusBadge, StatusBadgeVariant } from '../common/StatusBadge';
 
@@ -13,6 +14,8 @@ export const PriorityInvestigationList: React.FC<PriorityInvestigationListProps>
   exposureSignals,
   isLoading,
 }) => {
+  const navigate = useNavigate();
+
   const getPriorityVariant = (priority: string): StatusBadgeVariant => {
     const p = priority.toLowerCase();
     if (p.includes('p1') || p.includes('urgent') || p.includes('critical')) return 'critical';
@@ -43,9 +46,21 @@ export const PriorityInvestigationList: React.FC<PriorityInvestigationListProps>
             Factual observations and exposure indicators prioritized for defensive investigation.
           </p>
         </div>
-        <span style={{ fontSize: '0.65rem', fontFamily: 'var(--font-mono)', color: 'var(--color-accent-violet)', fontWeight: 600 }}>
-          EXPOSURE ≠ VULNERABILITY ≠ EXPLOIT
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+          <span style={{ fontSize: '0.65rem', fontFamily: 'var(--font-mono)', color: 'var(--color-accent-violet)', fontWeight: 600 }}>
+            EXPOSURE ≠ VULNERABILITY ≠ EXPLOIT
+          </span>
+          <button
+            type="button"
+            className="btn-secondary"
+            style={{ padding: '4px 12px', fontSize: 'var(--text-xs)', display: 'flex', alignItems: 'center', gap: '6px' }}
+            onClick={() => navigate('/exposure')}
+            title="Open Exposure Intelligence module"
+          >
+            <span>VIEW EXPOSURE INTELLIGENCE</span>
+            <span aria-hidden="true">→</span>
+          </button>
+        </div>
       </div>
 
       {isLoading ? (

@@ -5,6 +5,8 @@ import './styles/global.css';
 import './styles/components.css';
 import './styles/shell.css';
 import './styles/overview.css';
+import './styles/assets.css';
+import './styles/exposure.css';
 
 const rootElement = document.getElementById('root');
 

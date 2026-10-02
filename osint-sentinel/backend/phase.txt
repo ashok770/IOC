@@ -1,0 +1,66 @@
+✅ CHECKPOINT 1
+   Frontend foundation
+   App shell
+   Routing
+   API layer
+   Design system
+   Backend integration
+
+✅ CHECKPOINT 2 & 2.1
+   Target management
+   New assessment
+   Target selector
+   Real collection trigger
+   Executive Overview
+   UX + Integrity Polish
+
+✅ CHECKPOINT 3
+   Asset Intelligence
+
+✅ CHECKPOINT 4
+   Exposure Intelligence
+
+⬇️ NEXT
+
+CHECKPOINT 5
+   Technology Intelligence
+
+⬇️
+
+CHECKPOINT 6
+   Evidence & Provenance
+
+⬇️
+
+CHECKPOINT 7
+   External Asset Relationship Graph
+
+⬇️
+
+CHECKPOINT 8
+   External Exposure Assessment
+   + Prioritization
+
+⬇️
+
+CHECKPOINT 9
+   Investigation workflow
+
+⬇️
+
+CHECKPOINT 10
+   Reports
+
+⬇️
+
+CHECKPOINT 11
+   Marketing Site
+
+⬇️
+
+FINAL
+   Polish
+   UX
+   Performance
+   Documentation
+   Demo preparation
