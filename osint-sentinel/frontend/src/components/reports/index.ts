@@ -10,4 +10,5 @@ export * from './ExposureAssessmentSection';
 export * from './InvestigationPrioritiesSection';
 export * from './DefensiveRecommendationsSection';
 export * from './AssessmentLimitationsSection';
+export * from './ReportPageOne';
 export * from './ReportWorkspace';

@@ -248,23 +248,498 @@
 }
 
 /* ------------------------------------------------------------------------------
-   Report Document Structure
+   Report Document & A4 Portrait Page 1 Structure
    ------------------------------------------------------------------------------ */
 .report-document {
-  background-color: var(--color-bg-surface-elevated);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-lg);
-  padding: var(--space-8);
-  max-width: 1040px;
+  max-width: 210mm;
   margin: 0 auto var(--space-8) auto;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
   display: flex;
   flex-direction: column;
-  gap: var(--space-8);
+  gap: var(--space-6);
+}
+
+/* Page 1 A4 Deliverable Sheet */
+.report-page-1 {
+  width: 100%;
+  max-width: 210mm;
+  min-height: 297mm;
+  box-sizing: border-box;
+  margin: 0 auto;
+  padding: 16mm 18mm 14mm 18mm;
+  background-color: var(--color-bg-surface-elevated);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  page-break-after: always;
+  break-after: page;
 }
 
 @media (max-width: 768px) {
-  .report-document {
+  .report-page-1 {
+    padding: var(--space-5);
+    min-height: auto;
+  }
+}
+
+/* Page 1: Header */
+.p1-header {
+  border-bottom: 1px solid var(--color-border-subtle);
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+}
+
+.p1-header-brand-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.p1-brand-identity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.p1-brand-name {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--color-accent-cyan);
+}
+
+.p1-brand-separator {
+  color: var(--color-border-strong);
+  font-size: 0.8rem;
+}
+
+.p1-brand-tagline {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+}
+
+.p1-auth-badge {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--color-accent-violet);
+  background-color: var(--color-accent-violet-subtle);
+  border: 1px solid rgba(124, 92, 252, 0.3);
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+}
+
+/* Page 1: Document Title Block */
+.p1-title-block {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.p1-main-title {
+  font-size: 1.45rem; /* ~23px */
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--color-text-primary);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.p1-target-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.95rem;
+  margin-top: 2px;
+}
+
+.p1-target-prefix {
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.p1-target-domain {
+  font-weight: 700;
+}
+
+.p1-title-subtitle {
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+  margin: 4px 0 0 0;
+}
+
+/* Page 1: Assessment Metadata */
+.p1-metadata-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  background-color: var(--color-bg-base);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  margin-bottom: 18px;
+}
+
+@media (max-width: 768px) {
+  .p1-metadata-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.p1-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.p1-meta-item--span {
+  grid-column: span 4;
+  border-top: 1px solid var(--color-border-subtle);
+  padding-top: 6px;
+  margin-top: 2px;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .p1-meta-item--span {
+    grid-column: span 2;
+  }
+}
+
+.p1-meta-label {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.p1-meta-value {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+}
+
+.p1-meta-value.status-completed {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #34d399;
+}
+
+.p1-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #34d399;
+}
+
+/* Page 1: Primary Assessment Block */
+.p1-primary-assessment-card {
+  background-color: var(--color-bg-base);
+  border: 1px solid var(--color-border-subtle);
+  border-left: 3px solid var(--color-accent-cyan);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.p1-assessment-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.p1-assessment-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--color-accent-cyan);
+}
+
+.p1-assessment-body-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+@media (max-width: 650px) {
+  .p1-assessment-body-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}
+
+.p1-score-cluster {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.p1-score-numbers {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.p1-score-value {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  line-height: 1;
+}
+
+.p1-score-total {
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+}
+
+.p1-score-level-name {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary);
+}
+
+.p1-score-explanation {
+  flex: 1;
+  border-left: 1px solid var(--color-border-subtle);
+  padding-left: 16px;
+}
+
+.p1-score-disclaimer-text {
+  font-size: 0.76rem;
+  color: var(--color-text-secondary);
+  line-height: 1.45;
+  margin: 0;
+}
+
+/* Page 1: Assessment Snapshot Bar */
+.p1-snapshot-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--color-bg-base);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  margin-bottom: 18px;
+}
+
+@media (max-width: 650px) {
+  .p1-snapshot-bar {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .p1-snapshot-separator {
+    display: none;
+  }
+}
+
+.p1-snapshot-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  flex: 1;
+  gap: 2px;
+}
+
+.p1-snapshot-number {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  line-height: 1.1;
+}
+
+.p1-snapshot-label {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.p1-snapshot-separator {
+  width: 1px;
+  height: 26px;
+  background-color: var(--color-border-subtle);
+}
+
+/* Page 1: Sections (Executive Summary & Key Observations) */
+.p1-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.p1-section-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.p1-section-num {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--color-accent-cyan);
+  background-color: var(--color-accent-cyan-subtle);
+  border: 1px solid rgba(0, 200, 229, 0.25);
+  padding: 1px 5px;
+  border-radius: var(--radius-sm);
+}
+
+.p1-section-title {
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.p1-narrative-box {
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+}
+
+.p1-narrative-box p {
+  margin: 0;
+}
+
+.p1-level-tag {
+  color: #34d399;
+  font-weight: 700;
+}
+
+/* Page 1: Key Observations List */
+.p1-observations-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.p1-observation-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--color-text-secondary);
+}
+
+.p1-obs-bullet {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: var(--color-accent-cyan);
+  flex-shrink: 0;
+  margin-top: 6px;
+}
+
+.p1-obs-text {
+  flex: 1;
+}
+
+/* Page 1 Deliverable Footer */
+.p1-footer {
+  border-top: 1px solid var(--color-border-subtle);
+  padding-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--color-text-muted);
+  margin-top: 8px;
+}
+
+.p1-footer-brand {
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+.p1-footer-center {
+  color: var(--color-text-muted);
+}
+
+.p1-footer-page {
+  font-weight: 700;
+  color: var(--color-accent-cyan);
+}
+
+/* Screen Page Break Indicator */
+.report-page-break-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  max-width: 210mm;
+  margin: var(--space-6) auto;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+}
+
+.break-line {
+  flex: 1;
+  height: 1px;
+  background-color: var(--color-border-subtle);
+}
+
+.break-label {
+  padding: 3px 12px;
+  background-color: var(--color-bg-base);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+}
+
+/* Continuation wrapper for pages 2+ */
+.report-pages-continuation {
+  width: 100%;
+  max-width: 210mm;
+  margin: 0 auto;
+  background-color: var(--color-bg-surface-elevated);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-8);
+  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .report-pages-continuation {
     padding: var(--space-4);
     gap: var(--space-6);
   }
@@ -1228,6 +1703,11 @@
    PRINT-SPECIFIC STYLESHEET (@media print)
    Produces a clean, professional, non-cyberpunk paper assessment report.
    ------------------------------------------------------------------------------ */
+@page {
+  size: A4 portrait;
+  margin: 12mm 16mm 12mm 16mm;
+}
+
 @media print {
   /* Hide non-report UI elements */
   .app-sidebar,
@@ -1237,33 +1717,266 @@
   .page-header,
   .sidebar-backdrop,
   .btn,
-  .btn-toggle-inline {
+  .btn-toggle-inline,
+  .report-page-break-indicator {
     display: none !important;
   }
 
-  /* Reset layout containers */
+  /* Reset layout containers for natural multi-page paged media flow */
+  html,
   body,
   #root,
   .app-layout,
-  .app-main,
-  .page-container {
+  .app-main-wrapper,
+  .app-content,
+  .page-container,
+  .report-preview-wrapper,
+  .report-document {
     background: #ffffff !important;
     color: #111827 !important;
     margin: 0 !important;
     padding: 0 !important;
     width: 100% !important;
     min-width: 0 !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+    display: block !important;
+    position: static !important;
     box-shadow: none !important;
+    border: none !important;
   }
 
-  .report-document {
+  .app-main-wrapper {
+    margin-left: 0 !important;
+  }
+
+  /* ---------------------------------------------------------
+     PAGE 1 — EXECUTIVE ASSESSMENT (PRINT)
+     Must fit intentionally on exactly one A4 portrait sheet.
+     --------------------------------------------------------- */
+  .report-page-1 {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
+    box-sizing: border-box !important;
+    padding: 0 !important;
+    margin: 0 !important;
     background: #ffffff !important;
     color: #111827 !important;
     border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    page-break-before: auto !important;
+    break-before: auto !important;
+    page-break-after: always !important;
+    break-after: page !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .p1-header {
+    border-bottom: 1px solid #d1d5db !important;
+    padding-bottom: 10px !important;
+    margin-bottom: 14px !important;
+  }
+
+  .p1-brand-name {
+    color: #0369a1 !important;
+  }
+
+  .p1-brand-separator {
+    color: #9ca3af !important;
+  }
+
+  .p1-brand-tagline {
+    color: #4b5563 !important;
+  }
+
+  .p1-auth-badge {
+    color: #6d28d9 !important;
+    background-color: #ede9fe !important;
+    border: 1px solid #c4b5fd !important;
+  }
+
+  .p1-title-block {
+    margin-bottom: 14px !important;
+  }
+
+  .p1-main-title {
+    color: #111827 !important;
+    font-size: 1.35rem !important;
+  }
+
+  .p1-target-prefix {
+    color: #4b5563 !important;
+  }
+
+  .p1-target-domain {
+    color: #111827 !important;
+  }
+
+  .p1-title-subtitle {
+    color: #4b5563 !important;
+    font-size: 0.8rem !important;
+  }
+
+  .p1-metadata-grid {
+    background: #f9fafb !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 4px !important;
+    padding: 8px 12px !important;
+    margin-bottom: 14px !important;
+  }
+
+  .p1-meta-label {
+    color: #6b7280 !important;
+  }
+
+  .p1-meta-value {
+    color: #111827 !important;
+  }
+
+  .p1-meta-value.status-completed {
+    color: #059669 !important;
+  }
+
+  .p1-status-dot {
+    background-color: #059669 !important;
+  }
+
+  .p1-primary-assessment-card {
+    background: #f9fafb !important;
+    border: 1px solid #e5e7eb !important;
+    border-left: 4px solid #0284c7 !important;
+    border-radius: 4px !important;
+    padding: 12px 14px !important;
+    margin-bottom: 14px !important;
+  }
+
+  .p1-assessment-eyebrow {
+    color: #0284c7 !important;
+  }
+
+  .p1-score-value {
+    color: #111827 !important;
+  }
+
+  .p1-score-total {
+    color: #6b7280 !important;
+  }
+
+  .p1-score-level-name {
+    color: #374151 !important;
+  }
+
+  .p1-score-explanation {
+    border-left: 1px solid #e5e7eb !important;
+  }
+
+  .p1-score-disclaimer-text {
+    color: #4b5563 !important;
+    font-size: 0.74rem !important;
+  }
+
+  .p1-snapshot-bar {
+    background: #f9fafb !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 4px !important;
+    padding: 8px 12px !important;
+    margin-bottom: 14px !important;
+  }
+
+  .p1-snapshot-number {
+    color: #111827 !important;
+    font-size: 1.3rem !important;
+  }
+
+  .p1-snapshot-label {
+    color: #6b7280 !important;
+  }
+
+  .p1-snapshot-separator {
+    background-color: #e5e7eb !important;
+  }
+
+  .p1-section {
+    margin-bottom: 14px !important;
+  }
+
+  .p1-section-num {
+    background: #e0f2fe !important;
+    color: #0369a1 !important;
+    border: 1px solid #bae6fd !important;
+  }
+
+  .p1-section-title {
+    color: #111827 !important;
+    font-size: 0.85rem !important;
+  }
+
+  .p1-narrative-box {
+    color: #374151 !important;
+    font-size: 0.8rem !important;
+  }
+
+  .p1-level-tag {
+    color: #059669 !important;
+  }
+
+  .p1-observation-item {
+    color: #374151 !important;
+    font-size: 0.78rem !important;
+  }
+
+  .p1-obs-bullet {
+    background-color: #0284c7 !important;
+  }
+
+  .p1-footer {
+    border-top: 1px solid #d1d5db !important;
+    padding-top: 8px !important;
+    color: #6b7280 !important;
+  }
+
+  .p1-footer-brand {
+    color: #374151 !important;
+  }
+
+  .p1-footer-center {
+    color: #6b7280 !important;
+  }
+
+  .p1-footer-page {
+    color: #0284c7 !important;
+  }
+
+  /* ---------------------------------------------------------
+     PAGES 2+ CONTINUATION (PRINT)
+     Begins on a new sheet immediately following Page 1.
+     --------------------------------------------------------- */
+  .report-pages-continuation {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    page-break-before: auto !important;
+    break-before: auto !important;
+    background: #ffffff !important;
+    color: #111827 !important;
+    border: none !important;
+    border-radius: 0 !important;
     box-shadow: none !important;
     padding: 0 !important;
     margin: 0 !important;
-    max-width: 100% !important;
   }
 
   .report-doc-header {
@@ -1281,7 +1994,6 @@
   .report-meta-grid,
   .report-scope-card,
   .report-kpi-card,
-  .report-table-wrapper,
   .report-signal-item,
   .report-risk-overview-card,
   .report-factor-item,
@@ -1296,6 +2008,14 @@
     box-shadow: none !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
+  }
+
+  .report-table-wrapper {
+    background: #f9fafb !important;
+    border: 1px solid #e5e7eb !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    overflow-x: visible !important;
   }
 
   .report-data-table th {
@@ -1343,7 +2063,25 @@
 
   .report-section {
     border-bottom: 1px solid #e5e7eb !important;
-    break-inside: avoid;
-    page-break-inside: avoid;
+    break-inside: auto !important;
+    page-break-inside: auto !important;
+    margin-bottom: 18px !important;
+    padding-bottom: 18px !important;
+  }
+
+  .report-section-header {
+    break-after: avoid !important;
+    page-break-after: avoid !important;
+  }
+
+  .report-data-table tr,
+  .report-scope-card,
+  .report-kpi-card,
+  .report-signal-item,
+  .report-factor-item,
+  .report-rec-card,
+  .limitation-item {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
   }
 }

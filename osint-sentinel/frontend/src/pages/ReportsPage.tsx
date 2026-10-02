@@ -21,8 +21,7 @@ import {
 } from '../types';
 import { PageContainer, PageHeader, EmptyState, ErrorState } from '../components/common';
 import {
-  ReportHeader,
-  ExecutiveSummarySection,
+  ReportPageOne,
   ScopeMethodologySection,
   AssetInventorySection,
   ObservedExposureSection,
@@ -354,26 +353,32 @@ export const ReportsPage: React.FC = () => {
 
           {/* Actual Report Document Container */}
           <article className="report-document" aria-label="Security Assessment Report">
-            {/* Document Header */}
-            <ReportHeader
+            {/* PAGE 1: Executive Assessment Deliverable */}
+            <ReportPageOne
               target={selectedTarget}
               summary={summary}
               riskAssessment={riskAssessment}
+              technologies={technologies}
+              exposureSignals={exposureSignals}
+              evidenceItems={evidenceItems}
+              relationships={relationships}
               generatedAt={generatedTimestamp || 'Live Telemetry'}
             />
 
-            {/* 01. Executive Summary */}
-            <ExecutiveSummarySection
-              target={selectedTarget}
-              summary={summary}
-              riskAssessment={riskAssessment}
-            />
+            {/* Visual Page Break on Screen */}
+            <div className="report-page-break-indicator" aria-hidden="true">
+              <span className="break-line" />
+              <span className="break-label">PAGE BREAK • DETAILED INTELLIGENCE (PAGES 2+)</span>
+              <span className="break-line" />
+            </div>
 
-            {/* 02. Scope & Methodology */}
-            <ScopeMethodologySection
-              target={selectedTarget}
-              evidenceItems={evidenceItems}
-            />
+            {/* Pages 2+ (Detailed Intelligence Sections - to be redesigned in subsequent phases) */}
+            <div className="report-pages-continuation">
+              {/* 02. Scope & Methodology */}
+              <ScopeMethodologySection
+                target={selectedTarget}
+                evidenceItems={evidenceItems}
+              />
 
             {/* 03. Asset Inventory */}
             <AssetInventorySection
@@ -423,7 +428,8 @@ export const ReportsPage: React.FC = () => {
 
             {/* 11. Assessment Limitations */}
             <AssessmentLimitationsSection />
-          </article>
+          </div>
+        </article>
         </div>
       )}
     </PageContainer>
