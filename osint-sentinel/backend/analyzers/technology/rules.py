@@ -99,6 +99,16 @@ TECHNOLOGY_RULES: List[TechnologyRule] = [
         version_regex=None,
         confidence=0.95,
     ),
+    TechnologyRule(
+        name="Google Web Server",
+        category="web_server",
+        source_type="http_headers",
+        detection_method="response_header",
+        header_key="server",
+        pattern=re.compile(r"^gws$", re.IGNORECASE),
+        version_regex=None,
+        confidence=0.95,
+    ),
 
     # -------------------------------------------------------------------------
     # Application Frameworks (Source: X-Powered-By, etc.)
@@ -265,7 +275,7 @@ TECHNOLOGY_RULES: List[TechnologyRule] = [
         source_type="dns_record",
         detection_method="dns_mx",
         header_key="MX",
-        pattern=re.compile(r"(?:aspmx\.l\.google\.com|googlemail\.com)", re.IGNORECASE),
+        pattern=re.compile(r"(?:aspmx\.l\.google\.com|googlemail\.com|smtp\.google\.com)", re.IGNORECASE),
         version_regex=None,
         confidence=0.95,
     ),

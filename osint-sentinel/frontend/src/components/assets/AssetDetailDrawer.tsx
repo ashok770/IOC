@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Asset, Relationship } from '../../types';
 import { AssetTypeBadge } from './AssetTypeBadge';
-import { assetApi } from '../../api';
+import { assetApi, technologyApi } from '../../api';
 
 interface AssetDetailDrawerProps {
   asset: Asset | null;
@@ -14,8 +15,11 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
   primaryDomain,
   onClose,
 }) => {
+  const navigate = useNavigate();
   const [relationships, setRelationships] = useState<Relationship[]>([]);
   const [isLoadingRel, setIsLoadingRel] = useState(false);
+  const [techCount, setTechCount] = useState<number>(0);
+  const [isLoadingTech, setIsLoadingTech] = useState(false);
   const [showRawJson, setShowRawJson] = useState(false);
 
   // Close on Escape key
@@ -29,15 +33,17 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
-  // Fetch factual relationships for selected asset
+  // Fetch factual relationships and technologies for selected asset
   useEffect(() => {
     if (!asset) {
       setRelationships([]);
+      setTechCount(0);
       return;
     }
 
     let isMounted = true;
     setIsLoadingRel(true);
+    setIsLoadingTech(true);
 
     assetApi
       .getAssetRelationships(asset.id)
@@ -51,6 +57,21 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
         if (isMounted) {
           setRelationships([]);
           setIsLoadingRel(false);
+        }
+      });
+
+    technologyApi
+      .listAssetTechnologies(asset.id)
+      .then((res) => {
+        if (isMounted) {
+          setTechCount(res.total ?? (res.items || []).length);
+          setIsLoadingTech(false);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setTechCount(0);
+          setIsLoadingTech(false);
         }
       });
 
@@ -277,6 +298,30 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
                 {isLoadingRel
                   ? 'Querying relationships...'
                   : `${relationships.length} observed relationship${relationships.length === 1 ? '' : 's'} involving this asset.`}
+              </div>
+            </div>
+
+            <div className="drawer-future-notice" style={{ marginTop: 'var(--space-2)' }}>
+              <div className="drawer-future-title">Technology Observations</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                <span>
+                  {isLoadingTech
+                    ? 'Querying technologies...'
+                    : `${techCount} observation${techCount === 1 ? '' : 's'}`}
+                </span>
+                {techCount > 0 && (
+                  <button
+                    type="button"
+                    className="exposure-action-link"
+                    style={{ marginTop: 0 }}
+                    onClick={() => {
+                      onClose();
+                      navigate('/technologies');
+                    }}
+                  >
+                    VIEW TECHNOLOGIES →
+                  </button>
+                )}
               </div>
             </div>
           </div>

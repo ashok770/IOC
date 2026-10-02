@@ -1,0 +1,439 @@
+/* ==============================================================================
+   OSINT Sentinel — Technology Intelligence Styles
+   ============================================================================== */
+
+/* ------------------------------------------------------------------------------
+   Toolbar & Filters
+   ------------------------------------------------------------------------------ */
+.technology-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  background-color: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4);
+}
+
+.technology-toolbar-left {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  flex: 1;
+  min-width: 280px;
+}
+
+.technology-search-wrapper {
+  position: relative;
+  flex: 1;
+  max-width: 320px;
+  min-width: 180px;
+}
+
+.technology-search-icon {
+  position: absolute;
+  left: var(--space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-muted);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+}
+
+.technology-search-input {
+  width: 100%;
+  padding: 6px var(--space-3) 6px 34px;
+  background-color: var(--color-bg-base);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  transition: all var(--transition-fast);
+}
+
+.technology-search-input:focus {
+  outline: none;
+  border-color: var(--color-accent-cyan);
+  box-shadow: 0 0 0 1px var(--color-accent-cyan);
+}
+
+.technology-search-clear {
+  position: absolute;
+  right: var(--space-2);
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 2px 6px;
+  font-size: 0.75rem;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.technology-search-clear:hover {
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-surface-hover);
+}
+
+.technology-filter-select {
+  padding: 6px var(--space-3);
+  background-color: var(--color-bg-surface-elevated);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.technology-filter-select:hover {
+  background-color: var(--color-bg-surface-hover);
+  border-color: var(--color-border-strong);
+}
+
+.technology-filter-select:focus {
+  outline: none;
+  border-color: var(--color-accent-cyan);
+}
+
+.technology-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.technology-count-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
+
+.technology-count-number {
+  color: var(--color-accent-cyan);
+}
+
+.technology-clear-btn {
+  background: none;
+  border: 1px dashed var(--color-border-subtle);
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.technology-clear-btn:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-border-strong);
+  background-color: var(--color-bg-surface-hover);
+}
+
+/* ------------------------------------------------------------------------------
+   Category Badges
+   ------------------------------------------------------------------------------ */
+.tech-category-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.tech-category-badge--cdn {
+  background-color: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+}
+
+.tech-category-badge--web_server {
+  background-color: var(--color-accent-cyan-subtle);
+  color: var(--color-accent-cyan);
+  border: 1px solid rgba(0, 200, 229, 0.25);
+}
+
+.tech-category-badge--framework {
+  background-color: var(--color-accent-violet-subtle);
+  color: var(--color-accent-violet);
+  border: 1px solid rgba(139, 92, 246, 0.25);
+}
+
+.tech-category-badge--cms {
+  background-color: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.tech-category-badge--cloud {
+  background-color: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.tech-category-badge--email {
+  background-color: rgba(168, 85, 247, 0.12);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.25);
+}
+
+.tech-category-badge--other {
+  background-color: var(--color-bg-surface-elevated);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border-subtle);
+}
+
+/* ------------------------------------------------------------------------------
+   Detection Method Badges
+   ------------------------------------------------------------------------------ */
+.tech-method-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--color-text-secondary);
+  background-color: var(--color-bg-base);
+  border: 1px solid var(--color-border-subtle);
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------------------
+   Technology Inventory Table
+   ------------------------------------------------------------------------------ */
+.technology-table-container {
+  background-color: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  overflow-x: auto;
+}
+
+.technology-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.technology-table th {
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--color-bg-surface-elevated);
+  border-bottom: 1px solid var(--color-border-subtle);
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.technology-table th.sortable {
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.technology-table th.sortable:hover {
+  color: var(--color-text-primary);
+}
+
+.technology-table td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border-subtle);
+  font-size: var(--text-xs);
+  vertical-align: middle;
+}
+
+.technology-row {
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.technology-row:hover {
+  background-color: var(--color-bg-surface-hover);
+}
+
+.technology-row.selected {
+  background-color: var(--color-accent-cyan-subtle);
+}
+
+.technology-row:focus-visible {
+  outline: 2px solid var(--color-accent-cyan);
+  outline-offset: -2px;
+}
+
+.tech-name-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tech-name-text {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  font-size: var(--text-xs);
+}
+
+.tech-version-pill {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--color-accent-cyan);
+  background-color: var(--color-accent-cyan-subtle);
+  padding: 1px 5px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(0, 200, 229, 0.2);
+  align-self: flex-start;
+}
+
+.tech-version-none {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.tech-asset-cell {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  font-size: var(--text-xs);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tech-asset-sub {
+  font-size: 0.65rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+}
+
+.tech-confidence-cell {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+.tech-date-cell {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------------------
+   Technology Detail Drawer
+   ------------------------------------------------------------------------------ */
+.technology-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
+  z-index: 90;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.technology-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 500px;
+  max-width: 100vw;
+  background-color: var(--color-bg-surface);
+  border-left: 1px solid var(--color-border-strong);
+  box-shadow: var(--shadow-elevated);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  animation: drawerSlide 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.technology-disclaimer-box {
+  background-color: var(--color-bg-surface-elevated);
+  border-left: 3px solid var(--color-accent-cyan);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+.technology-disclaimer-title {
+  font-weight: 700;
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 2px;
+}
+
+.technology-action-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-accent-cyan);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-decoration: none;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+  margin-top: 4px;
+}
+
+.technology-action-link:hover {
+  text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .technology-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .technology-toolbar-left {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .technology-search-wrapper {
+    max-width: 100%;
+  }
+
+  .technology-toolbar-right {
+    justify-content: space-between;
+  }
+
+  .technology-drawer {
+    width: 100vw;
+  }
+}

@@ -314,3 +314,159 @@ def test_technology_api_endpoints(client: TestClient):
     assert asset_tech_data["asset_id"] == asset_id
     for item in asset_tech_data["items"]:
         assert item["evidence_id"] is not None  # Evidence linkage preserved!
+
+
+def test_google_web_server_detection():
+    detector = TechnologyDetector()
+    asset = Asset(
+        id="asset-g1",
+        target_id="tgt-g1",
+        asset_type="domain",
+        value="google.com",
+        source="target_registration",
+    )
+
+    # 1. Exact lowercase 'gws'
+    ev_lower = EvidenceItem(
+        id="ev-gws-1",
+        target_id="tgt-g1",
+        evidence_type="http_headers",
+        source="HTTP",
+        data={
+            "domain": "google.com",
+            "probed_url": "https://google.com",
+            "headers": {"server": "gws"},
+            "meta_generators": [],
+        },
+        confidence=1.0,
+    )
+    detected = detector.detect(evidence_items=[ev_lower], assets=[asset])
+    assert len(detected) == 1
+    assert detected[0].name == "Google Web Server"
+    assert detected[0].category == "web_server"
+    assert detected[0].version is None
+    assert detected[0].detection_method == "response_header"
+    assert detected[0].confidence == 0.95
+    assert detected[0].extra_data["matched_header"] == "server"
+    assert detected[0].extra_data["raw_value"] == "gws"
+
+    # 2. Case-insensitivity: 'GWS'
+    ev_upper = EvidenceItem(
+        id="ev-gws-2",
+        target_id="tgt-g1",
+        evidence_type="http_headers",
+        source="HTTP",
+        data={
+            "domain": "google.com",
+            "headers": {"server": "GWS"},
+            "meta_generators": [],
+        },
+        confidence=1.0,
+    )
+    detected_upper = detector.detect(evidence_items=[ev_upper], assets=[asset])
+    assert len(detected_upper) == 1
+    assert detected_upper[0].name == "Google Web Server"
+
+
+def test_google_workspace_mx_detection():
+    detector = TechnologyDetector()
+    asset = Asset(
+        id="asset-g1",
+        target_id="tgt-g1",
+        asset_type="domain",
+        value="google.com",
+        source="target_registration",
+    )
+
+    # 1. smtp.google.com
+    ev_smtp = EvidenceItem(
+        id="ev-mx-1",
+        target_id="tgt-g1",
+        evidence_type="dns_record",
+        source="DNS",
+        data={"domain": "google.com", "record_type": "MX", "exchange": "smtp.google.com"},
+        confidence=1.0,
+    )
+    detected_smtp = detector.detect(evidence_items=[ev_smtp], assets=[asset])
+    assert len(detected_smtp) == 1
+    assert detected_smtp[0].name == "Google Workspace"
+    assert detected_smtp[0].category == "email"
+    assert detected_smtp[0].detection_method == "dns_mx"
+    assert detected_smtp[0].confidence == 0.95
+
+    # 2. Existing signatures: aspmx.l.google.com
+    ev_aspmx = EvidenceItem(
+        id="ev-mx-2",
+        target_id="tgt-g1",
+        evidence_type="dns_record",
+        source="DNS",
+        data={"domain": "google.com", "record_type": "MX", "exchange": "aspmx.l.google.com"},
+        confidence=1.0,
+    )
+    detected_aspmx = detector.detect(evidence_items=[ev_aspmx], assets=[asset])
+    assert len(detected_aspmx) == 1
+    assert detected_aspmx[0].name == "Google Workspace"
+
+    # 3. Existing signatures: googlemail.com
+    ev_gmail = EvidenceItem(
+        id="ev-mx-3",
+        target_id="tgt-g1",
+        evidence_type="dns_record",
+        source="DNS",
+        data={"domain": "google.com", "record_type": "MX", "exchange": "googlemail.com"},
+        confidence=1.0,
+    )
+    detected_gmail = detector.detect(evidence_items=[ev_gmail], assets=[asset])
+    assert len(detected_gmail) == 1
+    assert detected_gmail[0].name == "Google Workspace"
+
+    # 4. Case-insensitivity: SMTP.GOOGLE.COM
+    ev_case = EvidenceItem(
+        id="ev-mx-4",
+        target_id="tgt-g1",
+        evidence_type="dns_record",
+        source="DNS",
+        data={"domain": "google.com", "record_type": "MX", "exchange": "SMTP.GOOGLE.COM"},
+        confidence=1.0,
+    )
+    detected_case = detector.detect(evidence_items=[ev_case], assets=[asset])
+    assert len(detected_case) == 1
+    assert detected_case[0].name == "Google Workspace"
+
+
+def test_unrelated_values_do_not_match_google_signatures():
+    detector = TechnologyDetector()
+    asset = Asset(
+        id="asset-g1",
+        target_id="tgt-g1",
+        asset_type="domain",
+        value="google.com",
+        source="target_registration",
+    )
+
+    # 1. Unrelated server headers (must not match Google Web Server)
+    for server_val in ["nginx", "apache", "example-gws.attacker.test", "my-gws-fake"]:
+        ev = EvidenceItem(
+            id=f"ev-fake-{server_val}",
+            target_id="tgt-g1",
+            evidence_type="http_headers",
+            source="HTTP",
+            data={"domain": "google.com", "headers": {"server": server_val}},
+            confidence=1.0,
+        )
+        detected = detector.detect(evidence_items=[ev], assets=[asset])
+        for d in detected:
+            assert d.name != "Google Web Server"
+
+    # 2. Unrelated MX exchange (must not match Google Workspace)
+    ev_fake_mx = EvidenceItem(
+        id="ev-fake-mx",
+        target_id="tgt-g1",
+        evidence_type="dns_record",
+        source="DNS",
+        data={"domain": "google.com", "record_type": "MX", "exchange": "smtp.example.com"},
+        confidence=1.0,
+    )
+    detected_mx = detector.detect(evidence_items=[ev_fake_mx], assets=[asset])
+    for d in detected_mx:
+        assert d.name != "Google Workspace"
