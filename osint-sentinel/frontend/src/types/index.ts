@@ -271,9 +271,11 @@ export interface RiskAssessment {
 }
 
 export interface AssetContributingFactor {
-  factor_name: string;
+  factor?: string;
+  factor_name?: string;
   score_impact: number;
-  description: string;
+  reason?: string;
+  description?: string;
   evidence_id?: string | null;
   recommended_investigation?: string | null;
 }

@@ -5,5 +5,6 @@ export * from './TechnologiesPage';
 export * from './EvidencePage';
 export * from './RelationshipsPage';
 export * from './RiskPage';
+export * from './RiskAssessmentPage';
 export * from './ReportsPage';
 export * from './SettingsPage';

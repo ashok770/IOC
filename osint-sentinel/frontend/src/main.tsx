@@ -9,6 +9,9 @@ import './styles/assets.css';
 import './styles/exposure.css';
 import './styles/technology.css';
 import './styles/evidence.css';
+import './styles/relationships.css';
+import './styles/risk.css';
+import './styles/reports.css';
 
 const rootElement = document.getElementById('root');
 

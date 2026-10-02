@@ -126,7 +126,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             </NavLink>
 
             <NavLink
-              to="/risk"
+              to="/risk-assessment"
               className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
               onClick={onClose}
             >

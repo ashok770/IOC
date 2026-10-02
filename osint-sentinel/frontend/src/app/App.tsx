@@ -8,7 +8,7 @@ import {
   TechnologiesPage,
   EvidencePage,
   RelationshipsPage,
-  RiskPage,
+  RiskAssessmentPage,
   ReportsPage,
   SettingsPage,
 } from '../pages';
@@ -26,7 +26,8 @@ export const App: React.FC = () => {
           <Route path="technologies" element={<TechnologiesPage />} />
           <Route path="evidence" element={<EvidencePage />} />
           <Route path="relationships" element={<RelationshipsPage />} />
-          <Route path="risk" element={<RiskPage />} />
+          <Route path="risk-assessment" element={<RiskAssessmentPage />} />
+          <Route path="risk" element={<Navigate to="/risk-assessment" replace />} />
           <Route path="reports" element={<ReportsPage />} />
           <Route path="settings" element={<SettingsPage />} />
           {/* Catch-all route */}
