@@ -280,9 +280,17 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
               </div>
               <div className="drawer-prop-row">
                 <span className="drawer-prop-label">Evidence Explorer</span>
-                <span style={{ fontSize: '0.68rem', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
-                  Upcoming Checkpoint
-                </span>
+                <button
+                  type="button"
+                  className="exposure-action-link"
+                  style={{ marginTop: 0 }}
+                  onClick={() => {
+                    onClose();
+                    navigate('/evidence');
+                  }}
+                >
+                  VIEW EVIDENCE →
+                </button>
               </div>
             </div>
           </div>

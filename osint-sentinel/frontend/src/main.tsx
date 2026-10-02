@@ -8,6 +8,7 @@ import './styles/overview.css';
 import './styles/assets.css';
 import './styles/exposure.css';
 import './styles/technology.css';
+import './styles/evidence.css';
 
 const rootElement = document.getElementById('root');
 

@@ -16,7 +16,7 @@ export const IntelligenceMetricsGrid: React.FC<IntelligenceMetricsGridProps> = (
   const metrics: { label: string; value?: number; to?: string }[] = [
     { label: 'Discovered Assets', value: summary?.assets, to: '/assets' },
     { label: 'Technologies', value: summary?.technologies, to: '/technologies' },
-    { label: 'Evidence Items', value: summary?.evidence_items },
+    { label: 'Evidence Items', value: summary?.evidence_items, to: '/evidence' },
     { label: 'Relationships', value: summary?.relationships },
     { label: 'Exposure Signals', value: summary?.exposure_signals, to: '/exposures' },
     { label: 'Findings Logged', value: summary?.informational_findings },
