@@ -9,17 +9,21 @@ interface AssetRowProps {
   onSelect: (asset: Asset) => void;
 }
 
+export const isAssetExternal = (asset: Asset, primaryDomain?: string): boolean => {
+  if (!primaryDomain) return false;
+  if (asset.asset_type === 'ip') return false;
+  const val = asset.value.toLowerCase();
+  const domain = primaryDomain.toLowerCase();
+  return val !== domain && !val.endsWith(`.${domain}`);
+};
+
 export const AssetRow: React.FC<AssetRowProps> = ({
   asset,
   primaryDomain,
   isSelected,
   onSelect,
 }) => {
-  const isExternal =
-    primaryDomain &&
-    asset.asset_type !== 'ip' &&
-    asset.value.toLowerCase() !== primaryDomain.toLowerCase() &&
-    !asset.value.toLowerCase().endsWith(`.${primaryDomain.toLowerCase()}`);
+  const isExternal = isAssetExternal(asset, primaryDomain);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -38,6 +42,11 @@ export const AssetRow: React.FC<AssetRowProps> = ({
       })
     : '--';
 
+  const formatSource = (source: string) => {
+    if (source === 'target_registration') return 'Scope Definition';
+    return source.toUpperCase();
+  };
+
   return (
     <tr
       className={`assets-row ${isSelected ? 'selected' : ''}`}
@@ -46,39 +55,53 @@ export const AssetRow: React.FC<AssetRowProps> = ({
       tabIndex={0}
       role="row"
       aria-selected={isSelected}
-      aria-label={`Asset ${asset.value}, type ${asset.asset_type}`}
+      aria-label={`Asset ${asset.value}, ${asset.asset_type}`}
     >
-      {/* Asset Value */}
-      <td>
-        <div className="asset-cell-value">
-          <span>{asset.value}</span>
-          {isExternal && <span className="external-tag">External Ref</span>}
+      {/* 1. ASSET (Strongest visual weight) */}
+      <td className="asset-td-value">
+        <div className="asset-value-wrapper">
+          <span className="asset-primary-value">{asset.value}</span>
         </div>
       </td>
 
-      {/* Asset Type */}
-      <td>
+      {/* 2. TYPE */}
+      <td className="asset-td-type">
         <AssetTypeBadge type={asset.asset_type} />
       </td>
 
-      {/* Source */}
-      <td>
-        <span className="asset-cell-source">{asset.source}</span>
+      {/* 3. SCOPE */}
+      <td className="asset-td-scope">
+        {isExternal ? (
+          <span className="asset-scope-tag asset-scope-tag--external" title="Discovered external entity outside target apex zone">
+            <span className="scope-dot" aria-hidden="true" />
+            External Reference
+          </span>
+        ) : (
+          <span className="asset-scope-tag asset-scope-tag--target" title="Directly within authorized target assessment boundary">
+            <span className="scope-dot" aria-hidden="true" />
+            Target Scope
+          </span>
+        )}
       </td>
 
-      {/* Confidence */}
-      <td>
+      {/* 4. SOURCE */}
+      <td className="asset-td-source">
+        <span className="asset-source-text">{formatSource(asset.source)}</span>
+      </td>
+
+      {/* 5. CONFIDENCE */}
+      <td className="asset-td-confidence">
         <span
-          className="asset-cell-confidence"
-          title="Factual observation confidence based on authoritative intelligence sources."
+          className="asset-confidence-badge"
+          title="Factual deterministically validated observation from authoritative telemetry."
         >
-          1.00
+          100%
         </span>
       </td>
 
-      {/* Last Seen */}
-      <td>
-        <span className="asset-cell-date">{formattedDate}</span>
+      {/* 6. LAST OBSERVED */}
+      <td className="asset-td-date">
+        <span className="asset-date-text">{formattedDate}</span>
       </td>
     </tr>
   );

@@ -24,83 +24,116 @@ export const PriorityInvestigationList: React.FC<PriorityInvestigationListProps>
     return 'cyan';
   };
 
-  const getPriorityClass = (priority: string): string => {
-    const p = priority.toLowerCase();
-    if (p.includes('p1') || p.includes('urgent')) return 'p1';
-    if (p.includes('p2') || p.includes('high')) return 'p2';
-    if (p.includes('p3') || p.includes('medium')) return 'p3';
-    return 'p4';
-  };
-
   const hasRecommendations = recommendations.length > 0;
   const hasSignals = exposureSignals.length > 0;
 
   return (
-    <section className="investigation-section">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+    <div className="priority-investigation-wrapper" aria-label="Priority Investigation Triage">
+      <div className="investigation-section-header">
         <div>
-          <h2 style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
-            Priority Investigation
-          </h2>
-          <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)' }}>
-            Factual observations and exposure indicators prioritized for defensive investigation.
+          <div className="investigation-title-row">
+            <span className="investigation-header-icon" aria-hidden="true">🛡️</span>
+            <h2 className="investigation-main-title">Priority Investigation Triage</h2>
+          </div>
+          <p className="investigation-main-subtitle">
+            Observable exposure indicators and defensive posture findings prioritized for analyst verification
           </p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-          <span style={{ fontSize: '0.65rem', fontFamily: 'var(--font-mono)', color: 'var(--color-accent-violet)', fontWeight: 600 }}>
+
+        <div className="investigation-header-actions">
+          <span className="discipline-banner-tag">
             EXPOSURE ≠ VULNERABILITY ≠ EXPLOIT
           </span>
           <button
             type="button"
-            className="btn-secondary"
-            style={{ padding: '4px 12px', fontSize: 'var(--text-xs)', display: 'flex', alignItems: 'center', gap: '6px' }}
+            className="btn btn-secondary btn-sm"
             onClick={() => navigate('/exposure')}
             title="Open Exposure Intelligence module"
           >
-            <span>VIEW EXPOSURE INTELLIGENCE</span>
+            <span>VIEW ALL SIGNALS</span>
             <span aria-hidden="true">→</span>
           </button>
         </div>
       </div>
 
       {isLoading ? (
-        <div className="state-box" style={{ minHeight: 160 }}>
+        <div className="state-box" style={{ minHeight: 200 }}>
           <div className="state-spinner" aria-hidden="true" />
           <span className="state-title">Retrieving priority investigation items...</span>
         </div>
       ) : !hasRecommendations && !hasSignals ? (
-        <div className="state-box" style={{ minHeight: 140 }}>
+        <div className="state-box" style={{ minHeight: 160 }}>
           <span className="state-title" style={{ color: 'var(--color-text-secondary)' }}>
             No prioritized exposure signals identified
           </span>
           <p className="state-message">
-            Deterministic risk evaluation and passive collection returned no prioritized exposure signals or high-urgency remediation actions for this target scope.
+            Deterministic risk evaluation and passive collection returned no prioritized exposure signals for this target scope.
           </p>
         </div>
       ) : (
-        <div className="investigation-list">
+        <div className="investigation-cards-stack">
           {/* Surface Risk Engine Recommendations if present */}
           {recommendations.map((rec, idx) => (
-            <div key={`rec-${idx}`} className={`investigation-card ${getPriorityClass(rec.priority)}`}>
-              <div className="investigation-header">
-                <span className="investigation-title">{rec.title}</span>
+            <div key={`rec-${idx}`} className="priority-finding-card">
+              <div className="finding-card-top-row">
+                <div className="finding-title-group">
+                  <div className="finding-tags-row">
+                    <span className="finding-category-tag">{rec.category.replace('_', ' ')}</span>
+                    <span className="finding-rule-type">Risk Engine</span>
+                  </div>
+                  <h3 className="finding-headline">{rec.title}</h3>
+                </div>
                 <StatusBadge
                   label={rec.priority.replace('_', ' ')}
                   variant={getPriorityVariant(rec.priority)}
                 />
               </div>
 
-              <p className="investigation-action">
-                <strong>Recommended Action:</strong> {rec.action}
-              </p>
+              <div className="finding-details-quad">
+                {/* 1. What was observed */}
+                <div className="detail-quad-col">
+                  <div className="quad-label-row">
+                    <span className="quad-indicator-dot" />
+                    <span className="detail-quad-label">WHAT WAS OBSERVED</span>
+                  </div>
+                  <p className="detail-quad-text">{rec.rationale}</p>
+                </div>
 
-              <p className="investigation-rationale">
-                <strong>Rationale:</strong> {rec.rationale}
-              </p>
+                {/* 2. Why it matters */}
+                <div className="detail-quad-col">
+                  <div className="quad-label-row">
+                    <span className="quad-indicator-dot quad-dot--action" />
+                    <span className="detail-quad-label">DEFENSIVE ACTION & IMPLICATION</span>
+                  </div>
+                  <p className="detail-quad-text">{rec.action}</p>
+                </div>
+              </div>
 
-              <div className="investigation-footer">
-                <span>Category: {rec.category.replace('_', ' ')}</span>
-                {rec.evidence_id && <span>Evidence ID: {rec.evidence_id.slice(0, 8)}...</span>}
+              <div className="finding-card-bottom-row">
+                <div className="finding-meta-item">
+                  <span className="finding-meta-label">CONFIDENCE:</span>
+                  <div className="confidence-meter-mini">
+                    <div className="confidence-meter-track">
+                      <div className="confidence-meter-fill" style={{ width: '100%' }} />
+                    </div>
+                    <span className="finding-meta-val">Verified Deterministic Rule</span>
+                  </div>
+                </div>
+
+                {rec.evidence_id && (
+                  <div className="finding-meta-item">
+                    <span className="finding-meta-label">SUPPORTING EVIDENCE:</span>
+                    <button
+                      type="button"
+                      className="finding-evidence-link"
+                      onClick={() => navigate('/evidence')}
+                      title="View supporting evidence artifact"
+                    >
+                      <span className="evidence-link-id">{rec.evidence_id.slice(0, 10)}...</span>
+                      <span aria-hidden="true">→</span>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -108,23 +141,73 @@ export const PriorityInvestigationList: React.FC<PriorityInvestigationListProps>
           {/* If no formal recommendations exist, surface verified exposure signals */}
           {!hasRecommendations &&
             exposureSignals.map((sig) => (
-              <div key={sig.id} className="investigation-card p4">
-                <div className="investigation-header">
-                  <span className="investigation-title">{sig.title}</span>
-                  <StatusBadge label="INFO SIGNAL" variant="cyan" />
+              <div key={sig.id} className="priority-finding-card">
+                <div className="finding-card-top-row">
+                  <div className="finding-title-group">
+                    <div className="finding-tags-row">
+                      <span className="finding-category-tag">{sig.category.replace('_', ' ')}</span>
+                      <span className="finding-rule-type">Public Observation</span>
+                    </div>
+                    <h3 className="finding-headline">{sig.title}</h3>
+                  </div>
+                  <StatusBadge label="EXPOSURE SIGNAL" variant="cyan" />
                 </div>
 
-                <p className="investigation-action">{sig.description}</p>
+                <div className="finding-details-quad">
+                  {/* 1. What was observed */}
+                  <div className="detail-quad-col">
+                    <div className="quad-label-row">
+                      <span className="quad-indicator-dot" />
+                      <span className="detail-quad-label">WHAT WAS OBSERVED</span>
+                    </div>
+                    <p className="detail-quad-text">{sig.description}</p>
+                  </div>
 
-                <div className="investigation-footer">
-                  <span>Category: {sig.category.replace('_', ' ')}</span>
-                  <span>Confidence: {(sig.confidence * 100).toFixed(0)}%</span>
-                  {sig.evidence_id && <span>Evidence: {sig.evidence_id.slice(0, 8)}...</span>}
+                  {/* 2. Why it matters */}
+                  <div className="detail-quad-col">
+                    <div className="quad-label-row">
+                      <span className="quad-indicator-dot quad-dot--action" />
+                      <span className="detail-quad-label">DEFENSIVE IMPLICATION</span>
+                    </div>
+                    <p className="detail-quad-text">
+                      Publicly observable configuration or software signature reveals technology stack characteristics.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="finding-card-bottom-row">
+                  <div className="finding-meta-item">
+                    <span className="finding-meta-label">CONFIDENCE:</span>
+                    <div className="confidence-meter-mini">
+                      <div className="confidence-meter-track">
+                        <div
+                          className="confidence-meter-fill"
+                          style={{ width: `${Math.round(sig.confidence * 100)}%` }}
+                        />
+                      </div>
+                      <span className="finding-meta-val">{(sig.confidence * 100).toFixed(0)}% verified</span>
+                    </div>
+                  </div>
+
+                  {sig.evidence_id && (
+                    <div className="finding-meta-item">
+                      <span className="finding-meta-label">SUPPORTING EVIDENCE:</span>
+                      <button
+                        type="button"
+                        className="finding-evidence-link"
+                        onClick={() => navigate('/evidence')}
+                        title="View supporting evidence artifact"
+                      >
+                        <span className="evidence-link-id">{sig.evidence_id.slice(0, 10)}...</span>
+                        <span aria-hidden="true">→</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
         </div>
       )}
-    </section>
+    </div>
   );
 };

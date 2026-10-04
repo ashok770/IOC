@@ -1,10 +1,15 @@
 import re
 import time
 import logging
+import asyncio
+import socket
+import ipaddress
 from typing import Dict, Any, List, Optional
 import httpx
+import httpcore
 
 from collectors.base import BaseCollector, CollectorResult, CollectorExecutionReport
+from collectors.network_security import SSRFViolation, SafeTransport
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +21,6 @@ META_GENERATOR_REGEX_ALT = re.compile(
     r'<meta\s+[^>]*content=["\']([^"\']+)["\'][^>]*name=["\']generator["\']',
     re.IGNORECASE,
 )
-
 
 class HTTPHeaderCollector(BaseCollector):
     """
@@ -42,56 +46,71 @@ class HTTPHeaderCollector(BaseCollector):
         schemes = ["https", "http"]
         results: List[CollectorResult] = []
         last_error: Optional[str] = None
+        
+        transport = SafeTransport(verify=False)
 
         for scheme in schemes:
             url = f"{scheme}://{domain}"
             try:
                 async with httpx.AsyncClient(
+                    transport=transport,
                     timeout=self.timeout,
                     follow_redirects=True,
                     max_redirects=3,
-                    verify=False,  # Still observe headers even if certificate has non-standard CA
                 ) as client:
-                    response = await client.get(url, headers=headers)
+                    
+                    async with client.stream("GET", url, headers=headers) as response:
+                        # Extract headers as dictionary
+                        resp_headers: Dict[str, str] = {}
+                        for k, v in response.headers.items():
+                            resp_headers[k.lower()] = v
 
-                    # Extract headers as dictionary
-                    resp_headers: Dict[str, str] = {}
-                    for k, v in response.headers.items():
-                        resp_headers[k.lower()] = v
+                        # Extract generator meta tags from HTML head if text response
+                        meta_generators: List[str] = []
+                        content_type = response.headers.get("content-type", "").lower()
+                        if "text/html" in content_type or "text/plain" in content_type:
+                            sample_text = ""
+                            bytes_read = 0
+                            max_bytes = 65536  # Strictly bounded to 64 KB
+                            
+                            async for chunk in response.aiter_text():
+                                sample_text += chunk
+                                bytes_read += len(chunk.encode("utf-8", errors="ignore"))
+                                if bytes_read >= max_bytes:
+                                    break
+                            
+                            sample_text = sample_text[:max_bytes]
+                            matches1 = META_GENERATOR_REGEX.findall(sample_text)
+                            matches2 = META_GENERATOR_REGEX_ALT.findall(sample_text)
+                            meta_generators = sorted(list(set(matches1 + matches2)))
 
-                    # Extract generator meta tags from HTML head if text response
-                    meta_generators: List[str] = []
-                    content_type = response.headers.get("content-type", "").lower()
-                    if "text/html" in content_type or "text/plain" in content_type:
-                        # Only scan up to first 64KB to avoid memory bloat
-                        sample_text = response.text[:65536]
-                        matches1 = META_GENERATOR_REGEX.findall(sample_text)
-                        matches2 = META_GENERATOR_REGEX_ALT.findall(sample_text)
-                        meta_generators = sorted(list(set(matches1 + matches2)))
+                        evidence_data: Dict[str, Any] = {
+                            "domain": domain,
+                            "probed_url": url,
+                            "final_url": str(response.url),
+                            "status_code": response.status_code,
+                            "http_version": response.http_version,
+                            "headers": resp_headers,
+                            "meta_generators": meta_generators,
+                        }
 
-                    evidence_data: Dict[str, Any] = {
-                        "domain": domain,
-                        "probed_url": url,
-                        "final_url": str(response.url),
-                        "status_code": response.status_code,
-                        "http_version": response.http_version,
-                        "headers": resp_headers,
-                        "meta_generators": meta_generators,
-                    }
-
-                    results.append(
-                        CollectorResult(
-                            evidence_type="http_headers",
-                            source="HTTP",
-                            source_url=str(response.url),
-                            data=evidence_data,
-                            confidence=1.0,
-                            notes=f"Observed HTTP response metadata from {response.url} (Status: {response.status_code})",
+                        results.append(
+                            CollectorResult(
+                                evidence_type="http_headers",
+                                source="HTTP",
+                                source_url=str(response.url),
+                                data=evidence_data,
+                                confidence=1.0,
+                                notes=f"Observed HTTP response metadata from {response.url} (Status: {response.status_code})",
+                            )
                         )
-                    )
-                    # Successful probe on this scheme; avoid redundant fallback probe
-                    break
+                        # Successful probe on this scheme; avoid redundant fallback probe
+                        break
 
+            except SSRFViolation as ssrf_err:
+                last_error = f"Security rejection on {scheme}: {str(ssrf_err)}"
+                logger.warning(f"SSRF violation detected for {domain}: {ssrf_err}")
+                break # If a domain resolves to a private IP, we don't try fallback HTTP
             except (httpx.ConnectError, httpx.ConnectTimeout) as conn_err:
                 last_error = f"Connection failed on {scheme}: {str(conn_err)}"
                 continue
@@ -99,6 +118,10 @@ class HTTPHeaderCollector(BaseCollector):
                 last_error = f"Request timed out on {scheme}"
                 continue
             except Exception as exc:
+                if "SSRFViolation" in str(exc) or "private" in str(exc):
+                    last_error = f"Security rejection on {scheme}: {str(exc)}"
+                    logger.warning(f"SSRF violation detected for {domain}: {exc}")
+                    break
                 last_error = f"Probe error on {scheme}: {str(exc)}"
                 continue
 

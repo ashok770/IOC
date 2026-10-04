@@ -2,26 +2,44 @@ import React from 'react';
 
 export const AssessmentIntegrityCard: React.FC = () => {
   return (
-    <div className="assessment-policy-banner">
-      <div className="policy-item">
-        <span className="policy-label">Assessment Mode</span>
-        <span className="policy-value">Authorized / Passive</span>
+    <footer className="methodology-provenance-strip" aria-label="Methodology and Provenance Parameters">
+      <div className="provenance-item">
+        <div className="provenance-item-header">
+          <span className="provenance-icon" aria-hidden="true">🔒</span>
+          <span className="provenance-label">Assessment Mode</span>
+        </div>
+        <span className="provenance-val">Authorized / Passive (Non-Intrusive)</span>
       </div>
 
-      <div className="policy-item">
-        <span className="policy-label">Data Sources</span>
-        <span className="policy-value">DNS • RDAP • Certificate Transparency • HTTP metadata / headers</span>
+      <div className="provenance-sep" aria-hidden="true" />
+
+      <div className="provenance-item">
+        <div className="provenance-item-header">
+          <span className="provenance-icon" aria-hidden="true">📡</span>
+          <span className="provenance-label">Data Sources</span>
+        </div>
+        <span className="provenance-val">DNS • RDAP • Certificate Transparency • HTTP Headers</span>
       </div>
 
-      <div className="policy-item">
-        <span className="policy-label">Execution Policy</span>
-        <span className="policy-value">Non-Intrusive / Zero Exploitation</span>
+      <div className="provenance-sep" aria-hidden="true" />
+
+      <div className="provenance-item">
+        <div className="provenance-item-header">
+          <span className="provenance-icon" aria-hidden="true">🛡️</span>
+          <span className="provenance-label">Execution Policy</span>
+        </div>
+        <span className="provenance-val">Zero Exploitation / Read-Only OSINT</span>
       </div>
 
-      <div className="policy-item">
-        <span className="policy-label">Provenance</span>
-        <span className="policy-value">Deterministic / Evidenced</span>
+      <div className="provenance-sep" aria-hidden="true" />
+
+      <div className="provenance-item">
+        <div className="provenance-item-header">
+          <span className="provenance-icon" aria-hidden="true">⚖️</span>
+          <span className="provenance-label">Provenance</span>
+        </div>
+        <span className="provenance-val">Deterministic / Evidenced Telemetry</span>
       </div>
-    </div>
+    </footer>
   );
 };

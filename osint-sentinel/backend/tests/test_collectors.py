@@ -97,11 +97,21 @@ def test_rdap_collector_mocked():
         ],
     }
 
+    import json
+    from contextlib import asynccontextmanager
+
+    async def mock_aiter_text():
+        yield json.dumps(mock_rdap_payload)
+
     mock_response = MagicMock()
     mock_response.status_code = 200
-    mock_response.json.return_value = mock_rdap_payload
+    mock_response.aiter_text = mock_aiter_text
 
-    with patch("httpx.AsyncClient.get", return_value=mock_response):
+    @asynccontextmanager
+    async def mock_stream(*args, **kwargs):
+        yield mock_response
+
+    with patch("httpx.AsyncClient.stream", side_effect=mock_stream):
         report = asyncio.run(collector.collect("example.org"))
 
     assert report.status == "success"
@@ -117,7 +127,13 @@ def test_rdap_collector_mocked():
 def test_rdap_collector_timeout():
     collector = RDAPCollector()
 
-    with patch("httpx.AsyncClient.get", side_effect=httpx.TimeoutException("Timeout")):
+    from contextlib import asynccontextmanager
+    @asynccontextmanager
+    async def mock_stream(*args, **kwargs):
+        raise httpx.TimeoutException("Timeout")
+        yield  # Just for generator semantics
+
+    with patch("httpx.AsyncClient.stream", side_effect=mock_stream):
         report = asyncio.run(collector.collect("example.org"))
 
     assert report.status == "partial"

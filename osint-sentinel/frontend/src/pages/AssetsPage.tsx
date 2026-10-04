@@ -7,8 +7,11 @@ import {
   AssetToolbar,
   AssetTable,
   AssetDetailDrawer,
+  AssetSummaryStrip,
   SortField,
   SortOrder,
+  ScopeFilter,
+  isAssetExternal,
 } from '../components/assets';
 
 export const AssetsPage: React.FC = () => {
@@ -24,13 +27,14 @@ export const AssetsPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Filter, search & sort states
+  // Search, filter & sorting states
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedType, setSelectedType] = useState<string>('all');
+  const [selectedScope, setSelectedScope] = useState<ScopeFilter>('all');
   const [sortField, setSortField] = useState<SortField>('last_seen_at');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
 
-  // Selected asset for investigation drawer
+  // Selected asset for investigation detail drawer
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
 
   // Load assets strictly scoped to the active target
@@ -59,6 +63,7 @@ export const AssetsPage: React.FC = () => {
     setSelectedAsset(null);
     setSearchQuery('');
     setSelectedType('all');
+    setSelectedScope('all');
     setError(null);
 
     if (selectedTarget?.id) {
@@ -88,8 +93,9 @@ export const AssetsPage: React.FC = () => {
   // Filtered & sorted asset list
   const filteredAssets = useMemo(() => {
     let result = [...assets];
+    const primaryDomain = selectedTarget?.primary_domain;
 
-    // Filter by type
+    // 1. Filter by Type
     if (selectedType !== 'all') {
       result = result.filter((a) => {
         if (selectedType === 'certificate_associated_hostname') {
@@ -102,19 +108,38 @@ export const AssetsPage: React.FC = () => {
       });
     }
 
-    // Filter by search query (case-insensitive value matching)
-    if (searchQuery.trim()) {
-      const query = searchQuery.trim().toLowerCase();
-      result = result.filter((a) => a.value.toLowerCase().includes(query));
+    // 2. Filter by Scope
+    if (selectedScope !== 'all') {
+      result = result.filter((a) => {
+        const isExternal = isAssetExternal(a, primaryDomain);
+        if (selectedScope === 'target_scope') return !isExternal;
+        if (selectedScope === 'external_reference') return isExternal;
+        return true;
+      });
     }
 
-    // Sort
+    // 3. Filter by Search query (case-insensitive value matching)
+    if (searchQuery.trim()) {
+      const query = searchQuery.trim().toLowerCase();
+      result = result.filter(
+        (a) =>
+          a.value.toLowerCase().includes(query) ||
+          a.source.toLowerCase().includes(query) ||
+          a.asset_type.toLowerCase().includes(query)
+      );
+    }
+
+    // 4. Sort
     result.sort((a, b) => {
       let cmp = 0;
       if (sortField === 'value') {
         cmp = a.value.localeCompare(b.value);
       } else if (sortField === 'asset_type') {
         cmp = a.asset_type.localeCompare(b.asset_type);
+      } else if (sortField === 'scope') {
+        const extA = isAssetExternal(a, primaryDomain) ? 1 : 0;
+        const extB = isAssetExternal(b, primaryDomain) ? 1 : 0;
+        cmp = extA - extB;
       } else if (sortField === 'source') {
         cmp = a.source.localeCompare(b.source);
       } else if (sortField === 'last_seen_at') {
@@ -126,9 +151,9 @@ export const AssetsPage: React.FC = () => {
     });
 
     return result;
-  }, [assets, selectedType, searchQuery, sortField, sortOrder]);
+  }, [assets, selectedType, selectedScope, searchQuery, sortField, sortOrder, selectedTarget?.primary_domain]);
 
-  // Loading targets check
+  // Loading targets state
   if (isLoadingTargets && !selectedTarget) {
     return (
       <PageContainer>
@@ -156,24 +181,21 @@ export const AssetsPage: React.FC = () => {
 
   return (
     <PageContainer>
-      {/* Page Header */}
+      {/* SECTION 1 — Compact Page Header */}
       <PageHeader
         title="Asset Intelligence"
         subtitle="Discovered external assets within the authorized assessment scope."
         badge={
-          <span
-            style={{
-              fontFamily: 'var(--font-mono)',
-              fontSize: '0.72rem',
-              color: 'var(--color-accent-cyan)',
-              backgroundColor: 'var(--color-accent-cyan-subtle)',
-              padding: '3px 8px',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid rgba(0, 200, 229, 0.25)',
-            }}
-          >
+          <span className="asset-header-target-tag">
             TARGET: {selectedTarget.primary_domain}
           </span>
+        }
+        actions={
+          <div className="asset-header-meta">
+            <span className="asset-header-count-indicator">
+              <span className="count-number">{assets.length}</span> Assets Discovered
+            </span>
+          </div>
         }
       />
 
@@ -198,27 +220,38 @@ export const AssetsPage: React.FC = () => {
           onAction={isCollectionRunning ? undefined : handleRunAssessment}
         />
       ) : (
-        <>
-          {/* Toolbar */}
+        <div className="assets-content-stack">
+          {/* Asset Type Composition Summary */}
+          <AssetSummaryStrip
+            assets={assets}
+            primaryDomain={selectedTarget.primary_domain}
+            selectedType={selectedType}
+            onSelectType={setSelectedType}
+          />
+
+          {/* SECTION 2 — Search / Filter Toolbar */}
           <AssetToolbar
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             selectedType={selectedType}
             onTypeChange={setSelectedType}
+            selectedScope={selectedScope}
+            onScopeChange={setSelectedScope}
             totalCount={assets.length}
             filteredCount={filteredAssets.length}
             onClearFilters={() => {
               setSearchQuery('');
               setSelectedType('all');
+              setSelectedScope('all');
             }}
           />
 
-          {/* Table or Filtered Empty State */}
+          {/* SECTION 3 — Primary Asset Table */}
           {filteredAssets.length === 0 ? (
             <div className="state-box" style={{ minHeight: 200 }}>
               <span className="state-title">NO MATCHING ASSETS</span>
               <p className="state-message">
-                No assets match the current search query "{searchQuery}" and type filter.
+                No assets match the active search and scope criteria.
               </p>
               <button
                 type="button"
@@ -227,6 +260,7 @@ export const AssetsPage: React.FC = () => {
                 onClick={() => {
                   setSearchQuery('');
                   setSelectedType('all');
+                  setSelectedScope('all');
                 }}
               >
                 Clear Filters
@@ -243,13 +277,14 @@ export const AssetsPage: React.FC = () => {
               onSort={handleSort}
             />
           )}
-        </>
+        </div>
       )}
 
-      {/* Investigation Detail Drawer */}
+      {/* SECTION 4 — Redesigned Asset Detail Drawer */}
       <AssetDetailDrawer
         asset={selectedAsset}
         primaryDomain={selectedTarget.primary_domain}
+        allAssets={assets}
         onClose={() => setSelectedAsset(null)}
       />
     </PageContainer>

@@ -19,7 +19,7 @@ export const AssetTypeBadge: React.FC<AssetTypeBadgeProps> = ({ type, className 
         return 'IP Address';
       case 'certificate_associated_hostname':
       case 'certificate_hostname':
-        return 'Certificate Hostname';
+        return 'Cert Hostname';
       default:
         return type;
     }

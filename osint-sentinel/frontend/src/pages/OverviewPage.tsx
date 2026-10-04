@@ -1,21 +1,31 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useTarget } from '../context/TargetContext';
-import { targetApi, riskApi, exposureApi, assetApi } from '../api';
+import {
+  targetApi,
+  riskApi,
+  exposureApi,
+  assetApi,
+  technologyApi,
+  relationshipApi,
+} from '../api';
 import {
   AnalysisSummary,
   RiskAssessment,
   ExposureSignal,
   Asset,
+  Technology,
+  Relationship,
 } from '../types';
 import { PageContainer, EmptyState, ErrorState } from '../components/common';
 import {
   AssessmentHeader,
   CollectionBanner,
-  ExposureAssessmentCard,
-  FactorBreakdownCard,
-  IntelligenceMetricsGrid,
+  PrimaryAssessmentSection,
+  IntelligenceSnapshot,
+  IntelligencePipeline,
   PriorityInvestigationList,
-  AssetSummaryList,
+  AssetCompositionCard,
+  RelationshipStructureCard,
   AssessmentIntegrityCard,
 } from '../components/overview';
 
@@ -34,6 +44,8 @@ export const OverviewPage: React.FC = () => {
   const [risk, setRisk] = useState<RiskAssessment | null>(null);
   const [exposureSignals, setExposureSignals] = useState<ExposureSignal[]>([]);
   const [assets, setAssets] = useState<Asset[]>([]);
+  const [technologies, setTechnologies] = useState<Technology[]>([]);
+  const [relationships, setRelationships] = useState<Relationship[]>([]);
 
   const [isLoadingData, setIsLoadingData] = useState<boolean>(false);
   const [dataError, setDataError] = useState<string | null>(null);
@@ -43,19 +55,34 @@ export const OverviewPage: React.FC = () => {
     setDataError(null);
 
     try {
-      const [summaryRes, riskRes, signalsRes, assetsRes] = await Promise.all([
+      const [
+        summaryRes,
+        riskRes,
+        signalsRes,
+        assetsRes,
+        techRes,
+        relsRes,
+      ] = await Promise.all([
         targetApi.getAnalysisSummary(targetId).catch(() => null),
         riskApi.getTargetRisk(targetId).catch(() => null),
         exposureApi.listExposureSignals(targetId).catch(() => ({ items: [] })),
         assetApi.listTargetAssets(targetId).catch(() => ({ items: [] })),
+        technologyApi.listTargetTechnologies(targetId).catch(() => ({ items: [] })),
+        relationshipApi.listTargetRelationships(targetId).catch(() => ({ items: [] })),
       ]);
 
       setSummary(summaryRes);
       setRisk(riskRes);
       setExposureSignals(signalsRes?.items || []);
       setAssets(assetsRes?.items || []);
+      setTechnologies(techRes?.items || []);
+      setRelationships(relsRes?.items || []);
     } catch (err) {
-      setDataError(err instanceof Error ? err.message : 'Failed to retrieve assessment data from backend.');
+      setDataError(
+        err instanceof Error
+          ? err.message
+          : 'Failed to retrieve assessment intelligence telemetry from backend.'
+      );
     } finally {
       setIsLoadingData(false);
     }
@@ -69,6 +96,8 @@ export const OverviewPage: React.FC = () => {
       setRisk(null);
       setExposureSignals([]);
       setAssets([]);
+      setTechnologies([]);
+      setRelationships([]);
     }
   }, [selectedTarget?.id, loadOverviewData]);
 
@@ -76,7 +105,6 @@ export const OverviewPage: React.FC = () => {
     if (!selectedTarget) return;
     const res = await triggerCollection(selectedTarget.id);
     if (res) {
-      // Reload overview metrics after real collection completion
       await loadOverviewData(selectedTarget.id);
     }
   };
@@ -107,14 +135,14 @@ export const OverviewPage: React.FC = () => {
 
   return (
     <PageContainer>
-      {/* Overview Assessment Header */}
+      {/* SECTION 1: Target Header */}
       <AssessmentHeader
         target={selectedTarget}
         onRunAssessment={handleRunAssessment}
         isCollecting={isCollectionRunning}
       />
 
-      {/* Real-time Collection Progress & Completion Banner */}
+      {/* Real-time Collection Progress & Completion Notification */}
       <CollectionBanner
         isRunning={isCollectionRunning}
         summary={collectionSummary}
@@ -128,29 +156,48 @@ export const OverviewPage: React.FC = () => {
           onRetry={() => selectedTarget && loadOverviewData(selectedTarget.id)}
         />
       ) : (
-        <>
-          {/* External Exposure Assessment & Contributing Factors */}
-          <div className="exposure-section-grid">
-            <ExposureAssessmentCard risk={risk} isLoading={isLoadingData} />
-            <FactorBreakdownCard risk={risk} isLoading={isLoadingData} />
-          </div>
+        <div className="overview-workspace-flow">
+          {/* SECTION 2 & 3: Primary Assessment & Contributing Factors */}
+          <PrimaryAssessmentSection risk={risk} isLoading={isLoadingData} />
 
-          {/* KPI Intelligence Counters */}
-          <IntelligenceMetricsGrid summary={summary} isLoading={isLoadingData} />
+          {/* SECTION 4: Intelligence Snapshot */}
+          <IntelligenceSnapshot summary={summary} isLoading={isLoadingData} />
 
-          {/* Priority Investigation Triage */}
-          <PriorityInvestigationList
-            recommendations={risk?.recommendations || []}
-            exposureSignals={exposureSignals}
+          {/* SECTION 5: Intelligence Pipeline */}
+          <IntelligencePipeline
+            primaryDomain={selectedTarget.primary_domain}
+            summary={summary}
+            risk={risk}
             isLoading={isLoadingData}
           />
 
-          {/* Discovered Perimeter Surface Summary */}
-          <AssetSummaryList assets={assets} isLoading={isLoadingData} />
+          {/* Mid-Section Grid: Priority Investigation (Sec 7) & Relationships (Sec 9) */}
+          <div className="overview-mid-analytical-grid">
+            <PriorityInvestigationList
+              recommendations={risk?.recommendations || []}
+              exposureSignals={exposureSignals}
+              isLoading={isLoadingData}
+            />
 
-          {/* Assessment Integrity & Policy */}
+            <RelationshipStructureCard
+              primaryDomain={selectedTarget.primary_domain}
+              relationships={relationships}
+              assets={assets}
+              technologies={technologies}
+              isLoading={isLoadingData}
+            />
+          </div>
+
+          {/* SECTION 6 & 8: Asset Intelligence & Perimeter Surface */}
+          <AssetCompositionCard
+            assets={assets}
+            primaryDomain={selectedTarget.primary_domain}
+            isLoading={isLoadingData}
+          />
+
+          {/* SECTION 10: Methodology & Provenance Strip */}
           <AssessmentIntegrityCard />
-        </>
+        </div>
       )}
     </PageContainer>
   );

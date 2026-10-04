@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Target } from '../../types';
 import { StatusBadge, StatusBadgeVariant } from '../common/StatusBadge';
 import { useTarget } from '../../context/TargetContext';
@@ -15,9 +15,9 @@ export const AssessmentHeader: React.FC<AssessmentHeaderProps> = ({
   isCollecting,
 }) => {
   const { openCreateModal } = useTarget();
-  const [justCompleted, setJustCompleted] = React.useState(false);
+  const [justCompleted, setJustCompleted] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setJustCompleted(false);
   }, [target.id]);
 
@@ -47,67 +47,83 @@ export const AssessmentHeader: React.FC<AssessmentHeaderProps> = ({
     : new Date(target.created_at).toUTCString();
 
   return (
-    <div className="assessment-context-card">
-      <div className="assessment-meta">
-        <span className="assessment-scope-tag">External Security Assessment</span>
-        <div className="assessment-target-title">
-          <span>{target.primary_domain}</span>
+    <header className="overview-target-header" aria-label="Target Assessment Overview">
+      <div className="target-identity-block">
+        <div className="target-scope-tag-row">
+          <span className="target-scope-eyebrow">Security Intelligence Workspace</span>
+          <span className="target-scope-sep">•</span>
+          <span className="target-auth-label">Authorized External Reconnaissance</span>
+          <span className="target-scope-sep">•</span>
+          <span className="target-policy-pill">Zero Exploitation / Read-Only</span>
+        </div>
+
+        <div className="target-title-row">
+          <div className="target-domain-wrapper">
+            <span className="target-security-shield-icon" aria-hidden="true">🛡️</span>
+            <h1 className="target-domain-title">{target.primary_domain}</h1>
+          </div>
           <StatusBadge
             label={target.assessment_status}
             variant={getStatusVariant(target.assessment_status)}
           />
         </div>
-        {target.name && <span className="assessment-target-org">{target.name}</span>}
-        <div className="assessment-submeta-row">
-          <span>Target ID: {target.id}</span>
-          <span>•</span>
-          <span>Last assessed: {formattedDate}</span>
+
+        <div className="target-meta-row">
+          {target.name && (
+            <>
+              <span className="target-org-name">{target.name}</span>
+              <span className="target-meta-sep">•</span>
+            </>
+          )}
+          <span className="target-timestamp">Last assessed: {formattedDate}</span>
+          <span className="target-meta-sep">•</span>
+          <span className="target-id-chip">Target ID: {target.id.slice(0, 8)}...</span>
         </div>
       </div>
 
-      <div className="assessment-actions">
+      <div className="target-actions-block">
         <button
           type="button"
-          className="btn-primary"
+          className="btn btn-primary"
           onClick={handleRun}
           disabled={isCollecting}
           title={
             justCompleted
-              ? 'Assessment completed. Click to run passive collection again'
-              : 'Run passive intelligence collection against target domain'
+              ? 'Assessment completed. Click to rerun passive collection'
+              : 'Execute authorized passive external reconnaissance against target'
           }
         >
           {isCollecting ? (
             <>
               <span className="banner-spinner" aria-hidden="true" />
-              <span>COLLECTING INTELLIGENCE...</span>
+              <span>COLLECTING TELEMETRY...</span>
             </>
           ) : justCompleted ? (
             <>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
-              <span>ASSESSMENT COMPLETED</span>
+              <span>TELEMETRY UPDATED</span>
             </>
           ) : (
             <>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                 <polygon points="5 3 19 12 5 21 5 3" />
               </svg>
-              <span>RUN PASSIVE ASSESSMENT</span>
+              <span>RUN PASSIVE SCAN</span>
             </>
           )}
         </button>
 
         <button
           type="button"
-          className="btn-secondary"
+          className="btn btn-secondary"
           onClick={openCreateModal}
           disabled={isCollecting}
         >
-          + New Assessment
+          <span>+ Add Scope Target</span>
         </button>
       </div>
-    </div>
+    </header>
   );
 };
