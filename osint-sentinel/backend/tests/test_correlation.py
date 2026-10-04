@@ -535,7 +535,7 @@ def test_correlation_apis(client: TestClient, db_session: Session):
     assert all(r["relationship_type"] == "contains" for r in filtered_rel_resp.json()["items"])
 
     # 6. Test GET /api/v1/assets/{asset_id}/relationships
-    asset_rel_resp = client.get(f"/api/v1/assets/{asset.id}/relationships")
+    asset_rel_resp = client.get(f"/api/v1/assets/{asset.id}/relationships?target_id={target_id}")
     assert asset_rel_resp.status_code == 200
     asset_rel_data = asset_rel_resp.json()
     assert asset_rel_data["total"] >= 1

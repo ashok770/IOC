@@ -307,7 +307,7 @@ def test_technology_api_endpoints(client: TestClient):
     assets_res = client.get(f"/api/v1/targets/{target_id}/assets?asset_type=domain")
     asset_id = assets_res.json()["items"][0]["id"]
 
-    asset_tech_res = client.get(f"/api/v1/assets/{asset_id}/technologies")
+    asset_tech_res = client.get(f"/api/v1/assets/{asset_id}/technologies?target_id={target_id}")
     assert asset_tech_res.status_code == 200
     asset_tech_data = asset_tech_res.json()
     assert asset_tech_data["total"] >= 3

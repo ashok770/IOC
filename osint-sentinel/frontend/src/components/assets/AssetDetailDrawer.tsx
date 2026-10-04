@@ -63,7 +63,7 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
     // 1. Fetch relationships involving this asset
     setIsLoadingRel(true);
     assetApi
-      .getAssetRelationships(asset.id)
+      .getAssetRelationships(asset.target_id, asset.id)
       .then((res) => {
         if (isMounted) {
           setRelationships(res.items || []);
@@ -80,7 +80,7 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
     // 2. Fetch technologies observed on this asset
     setIsLoadingTech(true);
     technologyApi
-      .listAssetTechnologies(asset.id)
+      .listAssetTechnologies(asset.target_id, asset.id)
       .then((res) => {
         if (isMounted) {
           setTechnologies(res.items || []);

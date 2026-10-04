@@ -176,22 +176,22 @@ class RiskService:
         return enriched_items, total
 
     @classmethod
-    def get_asset_risk(cls, db: Session, asset_id: str) -> Dict[str, Any]:
+    def get_asset_risk(cls, db: Session, target_id: str, asset_id: str) -> Dict[str, Any]:
         """
-        Retrieves the risk priority details for a specific asset.
+        Retrieves the risk priority details for a specific asset, verifying target ownership.
         """
-        asset = db.query(Asset).filter(Asset.id == asset_id).first()
+        asset = db.query(Asset).filter(Asset.id == asset_id, Asset.target_id == target_id).first()
         if not asset:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Asset with ID '{asset_id}' not found.",
             )
 
-        score_record = db.query(AssetRiskScore).filter(AssetRiskScore.asset_id == asset_id).first()
+        score_record = db.query(AssetRiskScore).filter(AssetRiskScore.asset_id == asset_id, AssetRiskScore.target_id == target_id).first()
         if not score_record:
             # Recompute target risk to guarantee up-to-date score
             cls.compute_and_save_target_risk(db=db, target_id=asset.target_id)
-            score_record = db.query(AssetRiskScore).filter(AssetRiskScore.asset_id == asset_id).first()
+            score_record = db.query(AssetRiskScore).filter(AssetRiskScore.asset_id == asset_id, AssetRiskScore.target_id == target_id).first()
 
         if not score_record:
             raise HTTPException(

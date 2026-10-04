@@ -29,12 +29,12 @@ export const assetApi = {
   /**
    * Direct lookup of an asset by ID.
    */
-  getAsset: (assetId: string) =>
-    apiClient.get<Asset>(`/v1/assets/${assetId}`),
+  getAsset: (targetId: string, assetId: string) =>
+    apiClient.get<Asset>(`/v1/assets/${assetId}`, { params: { target_id: targetId } }),
 
   /**
    * List semantic relationships involving this asset.
    */
-  getAssetRelationships: (assetId: string) =>
-    apiClient.get<RelationshipListResponse>(`/v1/assets/${assetId}/relationships`),
+  getAssetRelationships: (targetId: string, assetId: string) =>
+    apiClient.get<RelationshipListResponse>(`/v1/assets/${assetId}/relationships`, { params: { target_id: targetId } }),
 };

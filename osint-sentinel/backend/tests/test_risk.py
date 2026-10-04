@@ -527,7 +527,7 @@ def test_risk_assessment_apis(client: TestClient, db_session: Session):
     assert assets_risk_data["items"][0]["priority_score"] >= 50.0
 
     # 3. GET /api/v1/assets/{asset_id}/risk
-    single_asset_risk_resp = client.get(f"/api/v1/assets/{asset.id}/risk")
+    single_asset_risk_resp = client.get(f"/api/v1/assets/{asset.id}/risk?target_id={target_id}")
     assert single_asset_risk_resp.status_code == 200
     single_data = single_asset_risk_resp.json()
     assert single_data["asset_id"] == asset.id

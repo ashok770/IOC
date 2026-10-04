@@ -22,10 +22,11 @@ router = APIRouter(prefix="/v1/assets", tags=["Assets & Inventory"])
 )
 def get_asset(
     asset_id: str,
+    target_id: str = Query(..., description="Target ID to verify isolation"),
     db: Session = Depends(get_db),
 ) -> AssetResponse:
-    """Retrieve details for a single asset by ID."""
-    asset = db.query(Asset).filter(Asset.id == asset_id).first()
+    """Retrieve details for a single asset by ID, strictly verifying target scope."""
+    asset = db.query(Asset).filter(Asset.id == asset_id, Asset.target_id == target_id).first()
     if not asset:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -41,15 +42,17 @@ def get_asset(
 )
 def get_asset_technologies(
     asset_id: str,
+    target_id: str = Query(..., description="Target ID to verify isolation"),
     skip: int = Query(0, ge=0, description="Offset"),
     limit: int = Query(100, ge=1, le=500, description="Page limit"),
     db: Session = Depends(get_db),
 ) -> TechnologyListResponse:
     """
-    Retrieve technologies observed directly on a specific asset along with evidence provenance.
+    Retrieve technologies observed directly on a specific asset along with evidence provenance, strictly verifying target scope.
     """
     items, total = TechnologyService.list_asset_technologies(
         db=db,
+        target_id=target_id,
         asset_id=asset_id,
         skip=skip,
         limit=limit,
@@ -70,15 +73,17 @@ def get_asset_technologies(
 )
 def get_asset_relationships(
     asset_id: str,
+    target_id: str = Query(..., description="Target ID to verify isolation"),
     skip: int = Query(0, ge=0, description="Offset"),
     limit: int = Query(100, ge=1, le=500, description="Page limit"),
     db: Session = Depends(get_db),
 ) -> RelationshipListResponse:
     """
-    Retrieve all semantic relationships involving a specific asset (either as source or target).
+    Retrieve all semantic relationships involving a specific asset, strictly verifying target scope.
     """
     items, total = CorrelationService.list_asset_relationships(
         db=db,
+        target_id=target_id,
         asset_id=asset_id,
         skip=skip,
         limit=limit,
@@ -99,12 +104,13 @@ def get_asset_relationships(
 )
 def get_asset_risk(
     asset_id: str,
+    target_id: str = Query(..., description="Target ID to verify isolation"),
     db: Session = Depends(get_db),
 ) -> AssetRiskScoreResponse:
     """
-    Retrieve exposure priority score, tier (P1-P4), and contributing risk factors for a specific asset.
+    Retrieve exposure priority score, tier (P1-P4), and contributing risk factors for a specific asset, strictly verifying target scope.
     """
-    item = RiskService.get_asset_risk(db=db, asset_id=asset_id)
+    item = RiskService.get_asset_risk(db=db, target_id=target_id, asset_id=asset_id)
     return AssetRiskScoreResponse(**item)
 
 

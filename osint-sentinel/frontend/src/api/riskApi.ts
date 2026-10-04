@@ -19,6 +19,6 @@ export const riskApi = {
   /**
    * Get asset-level risk score and contributing exposure factors.
    */
-  getAssetRisk: (assetId: string) =>
-    apiClient.get<AssetRiskScore>(`/v1/assets/${assetId}/risk`),
+  getAssetRisk: (targetId: string, assetId: string) =>
+    apiClient.get<AssetRiskScore>(`/v1/assets/${assetId}/risk`, { params: { target_id: targetId } }),
 };

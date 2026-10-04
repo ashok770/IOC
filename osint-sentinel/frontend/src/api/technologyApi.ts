@@ -25,8 +25,8 @@ export const technologyApi = {
   /**
    * List technologies observed directly on a specific asset.
    */
-  listAssetTechnologies: (assetId: string, skip: number = 0, limit: number = 100) =>
+  listAssetTechnologies: (targetId: string, assetId: string, skip: number = 0, limit: number = 100) =>
     apiClient.get<TechnologyListResponse>(`/v1/assets/${assetId}/technologies`, {
-      params: { skip, limit },
+      params: { target_id: targetId, skip, limit },
     }),
 };
