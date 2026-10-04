@@ -59,6 +59,23 @@ class RDAPCollector(BaseCollector):
 
     async def collect(self, domain: str) -> CollectorExecutionReport:
         start_time = time.time()
+        
+        # 1. Collection Policy Boundary
+        try:
+            import ipaddress
+            ip_obj = ipaddress.ip_address(domain)
+            if ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_link_local or ip_obj.is_multicast or ip_obj.is_reserved or ip_obj.is_unspecified:
+                logger.info(f"Active collection skipped: destination classified as private/internal. ({domain})")
+                return CollectorExecutionReport(
+                    source_name=self.name,
+                    status="no_data",
+                    results=[],
+                    error_message="Active collection skipped: destination classified as private/internal.",
+                    duration_seconds=0.0,
+                )
+        except ValueError:
+            pass # It is a domain name
+
         query_url = self.url_template.format(domain=domain)
 
         headers = {

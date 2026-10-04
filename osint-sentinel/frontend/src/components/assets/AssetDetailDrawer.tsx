@@ -263,7 +263,12 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
             <h2 className="drawer-asset-value">{asset.value}</h2>
             <div className="drawer-identity-tags">
               <AssetTypeBadge type={asset.asset_type} />
-              {isExternal ? (
+              {asset.asset_type === 'ip' && asset.extra_data?.ip_classification && asset.extra_data.ip_classification !== 'public' ? (
+                <span className="asset-scope-tag asset-scope-tag--private" title="Private/internal address observed in passive intelligence.">
+                  <span className="scope-dot" aria-hidden="true" />
+                  PRIVATE / INTERNAL
+                </span>
+              ) : isExternal ? (
                 <span className="asset-scope-tag asset-scope-tag--external">
                   <span className="scope-dot" aria-hidden="true" />
                   External Reference

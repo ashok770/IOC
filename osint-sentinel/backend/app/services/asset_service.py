@@ -1,4 +1,5 @@
 import logging
+import ipaddress
 from typing import List, Dict, Any, Tuple, Optional
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session
@@ -55,14 +56,16 @@ class AssetService:
                 if record_type in ("A", "AAAA"):
                     address = data.get("address")
                     if address:
+                        clean_ip = address.strip()
+                        classification = AssetService._classify_ip(clean_ip)
                         AssetService._upsert_asset(
                             db=db,
                             target_id=target.id,
                             asset_type="ip",
-                            value=address.strip(),
+                            value=clean_ip,
                             source="DNS",
                             evidence_id=evidence.id,
-                            extra_data={"record_type": record_type, "ttl": data.get("ttl")},
+                            extra_data={"record_type": record_type, "ttl": data.get("ttl"), "ip_classification": classification},
                             cataloged_list=cataloged_assets,
                         )
 
@@ -122,6 +125,28 @@ class AssetService:
 
         db.commit()
         return cataloged_assets
+
+    @staticmethod
+    def _classify_ip(ip_str: str) -> str:
+        """Classifies an IP address using standard ipaddress library."""
+        try:
+            ip = ipaddress.ip_address(ip_str)
+            if ip.is_loopback:
+                return "loopback"
+            elif ip.is_link_local:
+                return "link_local"
+            elif ip.is_multicast:
+                return "multicast"
+            elif ip.is_unspecified:
+                return "unspecified"
+            elif ip.is_reserved:
+                return "special_reserved"
+            elif ip.is_private:
+                return "private_internal"
+            else:
+                return "public"
+        except ValueError:
+            return "unknown"
 
     @staticmethod
     def _upsert_asset(

@@ -404,6 +404,14 @@
   background-color: var(--color-status-warning);
 }
 
+.asset-scope-tag--private {
+  color: var(--color-status-neutral);
+}
+
+.asset-scope-tag--private .scope-dot {
+  background-color: var(--color-status-neutral);
+}
+
 /* ------------------------------------------------------------------------------
    Asset Inventory Table
    ------------------------------------------------------------------------------ */

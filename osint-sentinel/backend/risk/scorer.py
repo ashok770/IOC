@@ -375,14 +375,16 @@ class DeterministicRiskScorer:
                     "recommended_investigation": "Verify whether this hostname hosts intended public services.",
                 })
             elif asset.asset_type == "ip":
-                score += 5.0
-                factors.append({
-                    "factor": "resolved_ip_asset",
-                    "score_impact": 5.0,
-                    "reason": "Resolved public IPv4/IPv6 address",
-                    "evidence_id": asset.first_evidence_id,
-                    "recommended_investigation": "Confirm IP ownership and hosting provider allocation.",
-                })
+                ip_class = (asset.extra_data or {}).get("ip_classification", "public")
+                if ip_class == "public":
+                    score += 5.0
+                    factors.append({
+                        "factor": "resolved_ip_asset",
+                        "score_impact": 5.0,
+                        "reason": "Resolved public IPv4/IPv6 address",
+                        "evidence_id": asset.first_evidence_id,
+                        "recommended_investigation": "Confirm IP ownership and hosting provider allocation.",
+                    })
             else:
                 score += 5.0
 
