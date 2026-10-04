@@ -36,7 +36,7 @@ class BaseCollector(ABC):
     name: str = "base_collector"
 
     @abstractmethod
-    async def collect(self, domain: str) -> CollectorExecutionReport:
+    async def collect(self, domain: str, context: Optional["AssessmentContext"] = None) -> CollectorExecutionReport:
         """
         Execute passive intelligence gathering against an authorized domain.
         Must be strictly passive, non-destructive, and resilient to external failures.

@@ -39,14 +39,14 @@ class DomainIntelligenceCollector:
         self.ct_collector = ct_collector or CertificateTransparencyCollector()
         self.http_collector = http_collector or HTTPHeaderCollector()
 
-    async def collect(self, domain: str) -> DomainCollectionResult:
+    async def collect(self, domain: str, context=None) -> DomainCollectionResult:
         logger.info(f"Starting passive domain collection for: {domain}")
 
         tasks = [
-            self.dns_collector.collect(domain),
-            self.rdap_collector.collect(domain),
-            self.ct_collector.collect(domain),
-            self.http_collector.collect(domain),
+            self.dns_collector.collect(domain, context=context),
+            self.rdap_collector.collect(domain, context=context),
+            self.ct_collector.collect(domain, context=context),
+            self.http_collector.collect(domain, context=context),
         ]
 
         # Execute all passive collectors concurrently

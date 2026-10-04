@@ -34,6 +34,12 @@ class Settings(BaseSettings):
     # Security & CORS
     ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:5173"
 
+    # Phase 11.5 Resource Controls
+    MAX_CONCURRENT_OUTBOUND_REQUESTS: int = 10
+    MAX_REQUESTS_PER_ASSESSMENT: int = 50
+    COLLECTION_TIMEOUT_SECONDS: float = 10.0
+    MAX_ACTIVE_COLLECTION_ASSETS: int = 20
+
     @property
     def cors_origins(self) -> List[str]:
         """Convert comma-delimited allowed origins to a clean list."""

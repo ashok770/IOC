@@ -114,18 +114,55 @@ class DNSCollector(BaseCollector):
 
         return results
 
-    async def collect(self, domain: str) -> CollectorExecutionReport:
+    async def collect(self, domain: str, context=None) -> CollectorExecutionReport:
         start_time = time.time()
+        
+        if context:
+            if not context.check_and_increment_budget():
+                logger.warning(f"Budget exhausted for target {context.target_id}. Skipping DNS for {domain}")
+                return CollectorExecutionReport(
+                    source_name=self.name,
+                    status="no_data",
+                    results=[],
+                    error_message="Collection skipped: outbound request budget exhausted.",
+                    duration_seconds=0.0,
+                )
+            dest_key = f"{self.name}:{domain}"
+            if not context.mark_destination_requested(dest_key):
+                logger.info(f"Collection skipped: duplicate request to {domain}")
+                return CollectorExecutionReport(
+                    source_name=self.name,
+                    status="no_data",
+                    results=[],
+                    error_message=f"Collection skipped: duplicate request to {domain}",
+                    duration_seconds=0.0,
+                )
+                
+        from app.utils.resource_controls import GlobalResourceController
+        controller = GlobalResourceController.get_instance()
+        semaphore = controller.get_semaphore()
+        
         try:
-            # Execute DNS query in worker thread to prevent event loop blocking
-            results = await asyncio.to_thread(self._query_sync, domain)
+            async with semaphore:
+                # Execute DNS query in worker thread to prevent event loop blocking
+                results = await asyncio.to_thread(self._query_sync, domain)
+            
             duration = round(time.time() - start_time, 3)
-
             status = "success" if results else "no_data"
             return CollectorExecutionReport(
                 source_name=self.name,
                 status=status,
                 results=results,
+                duration_seconds=duration,
+            )
+        except asyncio.CancelledError:
+            duration = round(time.time() - start_time, 3)
+            logger.warning(f"DNS lookup cancelled for {domain}")
+            return CollectorExecutionReport(
+                source_name=self.name,
+                status="partial",
+                results=[],
+                error_message="DNS lookup cancelled",
                 duration_seconds=duration,
             )
         except Exception as exc:

@@ -35,7 +35,7 @@ class HTTPHeaderCollector(BaseCollector):
     def __init__(self, timeout: float = 4.0):
         self.timeout = timeout
 
-    async def collect(self, domain: str) -> CollectorExecutionReport:
+    async def collect(self, domain: str, context=None) -> CollectorExecutionReport:
         start_time = time.time()
         
         # 1. Collection Policy Boundary
@@ -65,63 +65,82 @@ class HTTPHeaderCollector(BaseCollector):
         
         transport = SafeTransport(verify=False)
 
+        from app.utils.resource_controls import GlobalResourceController
+        controller = GlobalResourceController.get_instance()
+        semaphore = controller.get_semaphore()
+
         for scheme in schemes:
             url = f"{scheme}://{domain}"
-            try:
-                async with httpx.AsyncClient(
-                    transport=transport,
-                    timeout=self.timeout,
-                    follow_redirects=True,
-                    max_redirects=3,
-                ) as client:
+            
+            # Resource controls
+            if context:
+                if not context.check_and_increment_budget():
+                    last_error = "Collection skipped: outbound request budget exhausted."
+                    logger.warning(f"Budget exhausted for target {context.target_id}. Skipping {url}")
+                    break
+                
+                dest_key = f"{self.name}:{url}"
+                if not context.mark_destination_requested(dest_key):
+                    last_error = f"Collection skipped: duplicate request to {url}."
+                    logger.info(last_error)
+                    break
                     
-                    async with client.stream("GET", url, headers=headers) as response:
-                        # Extract headers as dictionary
-                        resp_headers: Dict[str, str] = {}
-                        for k, v in response.headers.items():
-                            resp_headers[k.lower()] = v
+            try:
+                async with semaphore:
+                    async with httpx.AsyncClient(
+                        transport=transport,
+                        timeout=self.timeout,
+                        follow_redirects=True,
+                        max_redirects=3,
+                    ) as client:
+                        
+                        async with client.stream("GET", url, headers=headers) as response:
+                            # Extract headers as dictionary
+                            resp_headers: Dict[str, str] = {}
+                            for k, v in response.headers.items():
+                                resp_headers[k.lower()] = v
 
-                        # Extract generator meta tags from HTML head if text response
-                        meta_generators: List[str] = []
-                        content_type = response.headers.get("content-type", "").lower()
-                        if "text/html" in content_type or "text/plain" in content_type:
-                            sample_text = ""
-                            bytes_read = 0
-                            max_bytes = 65536  # Strictly bounded to 64 KB
-                            
-                            async for chunk in response.aiter_text():
-                                sample_text += chunk
-                                bytes_read += len(chunk.encode("utf-8", errors="ignore"))
-                                if bytes_read >= max_bytes:
-                                    break
-                            
-                            sample_text = sample_text[:max_bytes]
-                            matches1 = META_GENERATOR_REGEX.findall(sample_text)
-                            matches2 = META_GENERATOR_REGEX_ALT.findall(sample_text)
-                            meta_generators = sorted(list(set(matches1 + matches2)))
+                            # Extract generator meta tags from HTML head if text response
+                            meta_generators: List[str] = []
+                            content_type = response.headers.get("content-type", "").lower()
+                            if "text/html" in content_type or "text/plain" in content_type:
+                                sample_text = ""
+                                bytes_read = 0
+                                max_bytes = 65536  # Strictly bounded to 64 KB
+                                
+                                async for chunk in response.aiter_text():
+                                    sample_text += chunk
+                                    bytes_read += len(chunk.encode("utf-8", errors="ignore"))
+                                    if bytes_read >= max_bytes:
+                                        break
+                                
+                                sample_text = sample_text[:max_bytes]
+                                matches1 = META_GENERATOR_REGEX.findall(sample_text)
+                                matches2 = META_GENERATOR_REGEX_ALT.findall(sample_text)
+                                meta_generators = sorted(list(set(matches1 + matches2)))
 
-                        evidence_data: Dict[str, Any] = {
-                            "domain": domain,
-                            "probed_url": url,
-                            "final_url": str(response.url),
-                            "status_code": response.status_code,
-                            "http_version": response.http_version,
-                            "headers": resp_headers,
-                            "meta_generators": meta_generators,
-                        }
+                            evidence_data: Dict[str, Any] = {
+                                "domain": domain,
+                                "probed_url": url,
+                                "final_url": str(response.url),
+                                "status_code": response.status_code,
+                                "http_version": response.http_version,
+                                "headers": resp_headers,
+                                "meta_generators": meta_generators,
+                            }
 
-                        results.append(
-                            CollectorResult(
-                                evidence_type="http_headers",
-                                source="HTTP",
-                                source_url=str(response.url),
-                                data=evidence_data,
-                                confidence=1.0,
-                                notes=f"Observed HTTP response metadata from {response.url} (Status: {response.status_code})",
+                            results.append(
+                                CollectorResult(
+                                    evidence_type="http_headers",
+                                    source="HTTP",
+                                    source_url=str(response.url),
+                                    data=evidence_data,
+                                    confidence=1.0,
+                                    notes=f"Observed HTTP response metadata from {response.url} (Status: {response.status_code})",
+                                )
                             )
-                        )
-                        # Successful probe on this scheme; avoid redundant fallback probe
-                        break
+                            # Successful probe on this scheme; avoid redundant fallback probe
+                            break
 
             except SSRFViolation as ssrf_err:
                 last_error = f"Security rejection on {scheme}: {str(ssrf_err)}"
@@ -133,6 +152,9 @@ class HTTPHeaderCollector(BaseCollector):
             except httpx.TimeoutException:
                 last_error = f"Request timed out on {scheme}"
                 continue
+            except asyncio.CancelledError:
+                last_error = f"Request cancelled on {scheme}"
+                break
             except Exception as exc:
                 if "SSRFViolation" in str(exc) or "private" in str(exc):
                     last_error = f"Security rejection on {scheme}: {str(exc)}"
@@ -151,6 +173,7 @@ class HTTPHeaderCollector(BaseCollector):
             )
         else:
             logger.info(f"No HTTP service observed for {domain}: {last_error}")
+            # If the error was budget exhaustion, still return partial/no_data but with the reason
             return CollectorExecutionReport(
                 source_name=self.name,
                 status="no_data",

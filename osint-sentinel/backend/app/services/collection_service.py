@@ -33,147 +33,159 @@ class CollectionService:
         Executes passive intelligence collection for a target domain,
         persists raw evidence, runs basic factual analysis, and returns a summary.
         """
-        target = db.query(Target).filter(Target.id == target_id).first()
-        if not target:
+        from app.utils.resource_controls import AssessmentContext, GlobalResourceController
+        controller = GlobalResourceController.get_instance()
+        target_lock = await controller.get_target_lock(target_id)
+        
+        if target_lock.locked():
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Target with ID '{target_id}' not found.",
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Target '{target_id}' is already being assessed.",
             )
-
-        # Update target status to in_progress
-        target.assessment_status = "in_progress"
-        db.commit()
-
-        try:
-            # 1. Execute collectors
-            collector_result = await self.domain_collector.collect(target.primary_domain)
-
-            # 2. Persist Evidence Items
-            evidence_entities: List[EvidenceItem] = []
-            for item in collector_result.evidence_results:
-                evidence_record = EvidenceItem(
-                    target_id=target.id,
-                    evidence_type=item.evidence_type,
-                    source=item.source,
-                    source_url=item.source_url,
-                    collected_at=item.collected_at,
-                    data=item.data,
-                    confidence=item.confidence,
-                    notes=item.notes,
+            
+        async with target_lock:
+            target = db.query(Target).filter(Target.id == target_id).first()
+            if not target:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Target with ID '{target_id}' not found.",
                 )
-                db.add(evidence_record)
-                evidence_entities.append(evidence_record)
 
+            # Update target status to in_progress
+            target.assessment_status = "in_progress"
             db.commit()
 
-            # Refresh evidence to get generated IDs
-            for record in evidence_entities:
-                db.refresh(record)
+            try:
+                context = AssessmentContext(target_id=target.id)
+                # 1. Execute collectors
+                collector_result = await self.domain_collector.collect(target.primary_domain, context=context)
 
-            # Map evidence type to first evidence ID for provenance linking
-            evidence_type_map = {e.evidence_type: e.id for e in evidence_entities}
+                # 2. Persist Evidence Items
+                evidence_entities: List[EvidenceItem] = []
+                for item in collector_result.evidence_results:
+                    evidence_record = EvidenceItem(
+                        target_id=target.id,
+                        evidence_type=item.evidence_type,
+                        source=item.source,
+                        source_url=item.source_url,
+                        collected_at=item.collected_at,
+                        data=item.data,
+                        confidence=item.confidence,
+                        notes=item.notes,
+                    )
+                    db.add(evidence_record)
+                    evidence_entities.append(evidence_record)
 
-            # 3. Extract, classify, and sync Assets under Target
-            from app.services.asset_service import AssetService
-            cataloged_assets = AssetService.extract_and_sync_assets(
-                db=db,
-                target=target,
-                evidence_items=evidence_entities,
-            )
+                db.commit()
 
-            # 4. Extract, classify, and sync Technologies under Target & Assets
-            from app.services.technology_service import TechnologyService
-            cataloged_technologies = TechnologyService.extract_and_sync_technologies(
-                db=db,
-                target=target,
-                evidence_items=evidence_entities,
-                assets=cataloged_assets,
-            )
+                # Refresh evidence to get generated IDs
+                for record in evidence_entities:
+                    db.refresh(record)
 
-            # 5. Execute Factual Observations Analysis
-            findings = self.domain_analyzer.analyze(
-                target.primary_domain,
-                collector_result.evidence_results,
-            )
+                # Map evidence type to first evidence ID for provenance linking
+                evidence_type_map = {e.evidence_type: e.id for e in evidence_entities}
 
-            # 6. Persist Findings
-            for f in findings:
-                evidence_id = evidence_type_map.get(f.evidence_type) if f.evidence_type else None
-                finding_record = Finding(
-                    target_id=target.id,
-                    category=f.category,
-                    title=f.title,
-                    description=f.description,
-                    severity=f.severity,
-                    confidence=f.confidence,
-                    evidence_id=evidence_id,
+                # 3. Extract, classify, and sync Assets under Target
+                from app.services.asset_service import AssetService
+                cataloged_assets = AssetService.extract_and_sync_assets(
+                    db=db,
+                    target=target,
+                    evidence_items=evidence_entities,
                 )
-                db.add(finding_record)
 
-            db.commit()
+                # 4. Extract, classify, and sync Technologies under Target & Assets
+                from app.services.technology_service import TechnologyService
+                cataloged_technologies = TechnologyService.extract_and_sync_technologies(
+                    db=db,
+                    target=target,
+                    evidence_items=evidence_entities,
+                    assets=cataloged_assets,
+                )
 
-            # 7. Build Semantic Relationships
-            from app.services.correlation_service import CorrelationService
-            created_relationships = CorrelationService.build_and_sync_relationships(
-                db=db,
-                target=target,
-                assets=cataloged_assets,
-                evidence_items=evidence_entities,
-                technologies=cataloged_technologies,
-            )
+                # 5. Execute Factual Observations Analysis
+                findings = self.domain_analyzer.analyze(
+                    target.primary_domain,
+                    collector_result.evidence_results,
+                )
 
-            # 8. Evaluate Exposure Signals (persists signals and corresponding informational findings)
-            created_signals = CorrelationService.evaluate_and_sync_exposure_signals(
-                db=db,
-                target=target,
-                assets=cataloged_assets,
-                technologies=cataloged_technologies,
-                relationships=created_relationships,
-            )
+                # 6. Persist Findings
+                for f in findings:
+                    evidence_id = evidence_type_map.get(f.evidence_type) if f.evidence_type else None
+                    finding_record = Finding(
+                        target_id=target.id,
+                        category=f.category,
+                        title=f.title,
+                        description=f.description,
+                        severity=f.severity,
+                        confidence=f.confidence,
+                        evidence_id=evidence_id,
+                    )
+                    db.add(finding_record)
 
-            # 9. Compute Deterministic Risk Assessment & Asset Prioritization
-            from app.services.risk_service import RiskService
-            RiskService.compute_and_save_target_risk(db=db, target_id=target.id)
+                db.commit()
 
-            # Determine overall assessment status
-            has_failures = any(s == "failed" for s in collector_result.sources_status.values())
-            all_failed = all(s == "failed" for s in collector_result.sources_status.values())
+                # 7. Build Semantic Relationships
+                from app.services.correlation_service import CorrelationService
+                created_relationships = CorrelationService.build_and_sync_relationships(
+                    db=db,
+                    target=target,
+                    assets=cataloged_assets,
+                    evidence_items=evidence_entities,
+                    technologies=cataloged_technologies,
+                )
 
-            if all_failed:
+                # 8. Evaluate Exposure Signals (persists signals and corresponding informational findings)
+                created_signals = CorrelationService.evaluate_and_sync_exposure_signals(
+                    db=db,
+                    target=target,
+                    assets=cataloged_assets,
+                    technologies=cataloged_technologies,
+                    relationships=created_relationships,
+                )
+
+                # 9. Compute Deterministic Risk Assessment & Asset Prioritization
+                from app.services.risk_service import RiskService
+                RiskService.compute_and_save_target_risk(db=db, target_id=target.id)
+
+                # Determine overall assessment status
+                has_failures = any(s == "failed" for s in collector_result.sources_status.values())
+                all_failed = all(s == "failed" for s in collector_result.sources_status.values())
+
+                if all_failed:
+                    target.assessment_status = "failed"
+                elif has_failures:
+                    target.assessment_status = "partial"
+                else:
+                    target.assessment_status = "completed"
+
+                db.commit()
+                db.refresh(target)
+
+                total_findings = db.query(func.count(Finding.id)).filter(Finding.target_id == target.id).scalar() or 0
+
+                return CollectionSummaryResponse(
+                    target_id=target.id,
+                    domain=target.primary_domain,
+                    status=target.assessment_status,
+                    sources=collector_result.sources_status,
+                    evidence_items_created=len(evidence_entities),
+                    assets_discovered=len(cataloged_assets),
+                    technologies_discovered=len(cataloged_technologies),
+                    relationships_mapped=len(created_relationships),
+                    exposure_signals_identified=len(created_signals),
+                    findings_created=total_findings,
+                    timestamp=datetime.now(timezone.utc),
+                )
+
+            except Exception as exc:
+                db.rollback()
                 target.assessment_status = "failed"
-            elif has_failures:
-                target.assessment_status = "partial"
-            else:
-                target.assessment_status = "completed"
-
-            db.commit()
-            db.refresh(target)
-
-            total_findings = db.query(func.count(Finding.id)).filter(Finding.target_id == target.id).scalar() or 0
-
-            return CollectionSummaryResponse(
-                target_id=target.id,
-                domain=target.primary_domain,
-                status=target.assessment_status,
-                sources=collector_result.sources_status,
-                evidence_items_created=len(evidence_entities),
-                assets_discovered=len(cataloged_assets),
-                technologies_discovered=len(cataloged_technologies),
-                relationships_mapped=len(created_relationships),
-                exposure_signals_identified=len(created_signals),
-                findings_created=total_findings,
-                timestamp=datetime.now(timezone.utc),
-            )
-
-        except Exception as exc:
-            db.rollback()
-            target.assessment_status = "failed"
-            db.commit()
-            logger.error(f"Error during collection pipeline for target {target_id}: {exc}")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Collection pipeline failed: {str(exc)}",
-            )
+                db.commit()
+                logger.error(f"Error during collection pipeline for target {target_id}: {exc}")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"Collection pipeline failed: {str(exc)}",
+                )
 
     @staticmethod
     def get_evidence(
