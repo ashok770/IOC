@@ -6,6 +6,9 @@ from app.models.exposure_signal import ExposureSignal
 from app.models.risk_assessment import RiskAssessment, AssetRiskScore
 from app.models.evidence import EvidenceItem
 from app.models.finding import Finding
+from app.models.user import User
+from app.models.session import UserSession
+from app.models.audit import AuditLog
 
 __all__ = [
     "Target",
@@ -17,4 +20,7 @@ __all__ = [
     "AssetRiskScore",
     "EvidenceItem",
     "Finding",
+    "User",
+    "UserSession",
+    "AuditLog",
 ]

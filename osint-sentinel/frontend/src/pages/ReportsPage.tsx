@@ -83,8 +83,8 @@ export const ReportsPage: React.FC = () => {
 
     try {
       const [sumRes, riskRes] = await Promise.all([
-        targetApi.getAnalysisSummary(targetId).catch(() => null),
-        riskApi.getTargetRisk(targetId).catch(() => null),
+        targetApi.getAnalysisSummary(targetId),
+        riskApi.getTargetRisk(targetId),
       ]);
 
       setSummary(sumRes);
@@ -117,14 +117,14 @@ export const ReportsPage: React.FC = () => {
         evidenceRes,
         relRes,
       ] = await Promise.all([
-        targetApi.getAnalysisSummary(targetId).catch(() => null),
-        riskApi.getTargetRisk(targetId).catch(() => null),
-        riskApi.listTargetAssetPriorities(targetId, undefined, 0, 200).catch(() => ({ items: [], total: 0 })),
-        assetApi.listTargetAssets(targetId, { limit: 200 }).catch(() => ({ items: [] as Asset[] })),
-        exposureApi.listExposureSignals(targetId, { limit: 100 }).catch(() => ({ items: [] as ExposureSignal[] })),
-        technologyApi.listTargetTechnologies(targetId, { limit: 100 }).catch(() => ({ items: [] as Technology[] })),
-        evidenceApi.listEvidence(targetId, { limit: 100 }).catch(() => ({ items: [] as EvidenceItem[] })),
-        relationshipApi.listTargetRelationships(targetId, { limit: 100 }).catch(() => ({ items: [] as Relationship[] })),
+        targetApi.getAnalysisSummary(targetId),
+        riskApi.getTargetRisk(targetId),
+        riskApi.listTargetAssetPriorities(targetId, undefined, 0, 200),
+        assetApi.listTargetAssets(targetId, { limit: 200 }),
+        exposureApi.listExposureSignals(targetId, { limit: 100 }),
+        technologyApi.listTargetTechnologies(targetId, { limit: 100 }),
+        evidenceApi.listEvidence(targetId, { limit: 100 }),
+        relationshipApi.listTargetRelationships(targetId, { limit: 100 }),
       ]);
 
       setSummary(sumRes);

@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import Column, String, DateTime
+from sqlalchemy import Column, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from database.session import Base
 
@@ -9,6 +9,7 @@ class Target(Base):
     __tablename__ = "targets"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()), index=True)
+    owner_id = Column(String(36), ForeignKey("users.id"), nullable=True, index=True)
     name = Column(String(255), nullable=True)
     primary_domain = Column(String(255), nullable=False, unique=True, index=True)
     assessment_status = Column(String(50), nullable=False, default="pending", index=True)

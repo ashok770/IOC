@@ -54,6 +54,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   try {
     const response = await fetch(url, {
       ...restOptions,
+      credentials: 'include',
       headers: {
         ...defaultHeaders,
         ...headers,

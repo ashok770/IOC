@@ -1,8 +1,12 @@
 from typing import Optional
-from fastapi import APIRouter, Depends, Query, status, HTTPException
+from fastapi import APIRouter, Depends, Query, status, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from database.session import get_db
+from app.models.user import User
+from app.models.target import Target
+from app.api.deps import get_current_user, get_authorized_target
+from app.services.audit_service import AuditService, AuditAction, AuditResult
 from app.schemas.target import TargetCreate, TargetResponse, TargetListResponse
 from app.schemas.asset import AssetResponse, AssetListResponse
 from app.schemas.technology import TechnologyResponse, TechnologyListResponse
@@ -31,6 +35,8 @@ router = APIRouter(prefix="/v1/targets", tags=["Targets & Scoping"])
 )
 def create_target(
     payload: TargetCreate,
+    request: Request,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> TargetResponse:
     """
@@ -38,7 +44,16 @@ def create_target(
     Domain is normalized and strictly validated.
     Arbitrary URLs, protocols, ports, and IP addresses are rejected.
     """
-    target = TargetService.create_target(db=db, target_in=payload)
+    target = TargetService.create_target(db=db, target_in=payload, owner_id=current_user.id)
+    AuditService.log(
+        db=db,
+        action=AuditAction.TARGET_CREATED,
+        result=AuditResult.SUCCESS,
+        user_id=current_user.id,
+        target_id=target.id,
+        request=request,
+        metadata={"primary_domain": target.primary_domain}
+    )
     return TargetResponse.model_validate(target)
 
 
@@ -50,10 +65,12 @@ def create_target(
 def list_targets(
     skip: int = Query(0, ge=0, description="Offset"),
     limit: int = Query(50, ge=1, le=200, description="Page limit"),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> TargetListResponse:
     """List all registered assessment targets."""
-    items, total = TargetService.list_targets(db=db, skip=skip, limit=limit)
+    # We must filter list_targets by owner_id in TargetService
+    items, total = TargetService.list_targets(db=db, skip=skip, limit=limit, owner_id=current_user.id)
     return TargetListResponse(
         items=[TargetResponse.model_validate(t) for t in items],
         total=total,
@@ -66,16 +83,20 @@ def list_targets(
     summary="Get Target by ID",
 )
 def get_target(
-    target_id: str,
+    request: Request,
+    target: Target = Depends(get_authorized_target),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> TargetResponse:
     """Retrieve details of a registered assessment target."""
-    target = TargetService.get_target_by_id(db=db, target_id=target_id)
-    if not target:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Target with ID '{target_id}' not found.",
-        )
+    AuditService.log(
+        db=db,
+        action=AuditAction.TARGET_VIEWED,
+        result=AuditResult.SUCCESS,
+        user_id=current_user.id,
+        target_id=target.id,
+        request=request,
+    )
     return TargetResponse.model_validate(target)
 
 
@@ -85,15 +106,51 @@ def get_target(
     summary="Run Passive Domain Intelligence Collection",
 )
 async def collect_domain_intelligence(
-    target_id: str,
+    request: Request,
+    target: Target = Depends(get_authorized_target),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> CollectionSummaryResponse:
     """
     Runs passive domain intelligence collection (DNS, RDAP, Certificate Transparency),
     stores evidence, executes factual architectural analysis, and returns a summary.
     """
+    AuditService.log(
+        db=db,
+        action=AuditAction.TARGET_COLLECTION_STARTED,
+        result=AuditResult.STARTED,
+        user_id=current_user.id,
+        target_id=target.id,
+        request=request,
+    )
+    
     collection_service = CollectionService()
-    return await collection_service.run_domain_collection(db=db, target_id=target_id)
+    try:
+        summary = await collection_service.run_domain_collection(db=db, target_id=target.id)
+        AuditService.log(
+            db=db,
+            action=AuditAction.TARGET_COLLECTION_COMPLETED,
+            result=AuditResult.SUCCESS,
+            user_id=current_user.id,
+            target_id=target.id,
+            request=request,
+            metadata={
+                "evidence_count": summary.evidence_items_created,
+                "findings_count": summary.findings_created
+            }
+        )
+        return summary
+    except Exception as e:
+        AuditService.log(
+            db=db,
+            action=AuditAction.TARGET_COLLECTION_FAILED,
+            result=AuditResult.FAILURE,
+            user_id=current_user.id,
+            target_id=target.id,
+            request=request,
+            metadata={"error": str(e)}
+        )
+        raise
 
 
 @router.get(
@@ -102,16 +159,16 @@ async def collect_domain_intelligence(
     summary="List Evidence Items for Target",
 )
 def get_target_evidence(
-    target_id: str,
     evidence_type: Optional[str] = Query(None, description="Filter by evidence_type (e.g. dns_record, rdap_registration)"),
     skip: int = Query(0, ge=0, description="Offset"),
     limit: int = Query(100, ge=1, le=500, description="Page limit"),
+    target: Target = Depends(get_authorized_target),
     db: Session = Depends(get_db),
 ) -> EvidenceListResponse:
     """Query persisted evidence items for a target domain with optional filtering."""
     items, total = CollectionService.get_evidence(
         db=db,
-        target_id=target_id,
+        target_id=target.id,
         evidence_type=evidence_type,
         skip=skip,
         limit=limit,
@@ -119,7 +176,7 @@ def get_target_evidence(
     return EvidenceListResponse(
         items=[EvidenceResponse.model_validate(e) for e in items],
         total=total,
-        target_id=target_id,
+        target_id=target.id,
         evidence_type_filter=evidence_type,
         limit=limit,
         offset=skip,
@@ -132,16 +189,16 @@ def get_target_evidence(
     summary="List Factual Observations / Findings for Target",
 )
 def get_target_findings(
-    target_id: str,
     category: Optional[str] = Query(None, description="Filter by category (e.g. dns, mail, infrastructure, certificates)"),
     skip: int = Query(0, ge=0, description="Offset"),
     limit: int = Query(100, ge=1, le=500, description="Page limit"),
+    target: Target = Depends(get_authorized_target),
     db: Session = Depends(get_db),
 ) -> FindingListResponse:
     """Query factual observation findings produced by analyzers."""
     items, total = CollectionService.get_findings(
         db=db,
-        target_id=target_id,
+        target_id=target.id,
         category=category,
         skip=skip,
         limit=limit,
@@ -149,7 +206,7 @@ def get_target_findings(
     return FindingListResponse(
         items=[FindingResponse.model_validate(f) for f in items],
         total=total,
-        target_id=target_id,
+        target_id=target.id,
     )
 
 
@@ -159,29 +216,22 @@ def get_target_findings(
     summary="List Discovered Assets for Target",
 )
 def get_target_assets(
-    target_id: str,
     asset_type: Optional[str] = Query(
         None,
         description="Filter by asset_type (domain, subdomain, ip, certificate_associated_hostname)",
     ),
     skip: int = Query(0, ge=0, description="Offset"),
     limit: int = Query(100, ge=1, le=500, description="Page limit"),
+    target: Target = Depends(get_authorized_target),
     db: Session = Depends(get_db),
 ) -> AssetListResponse:
     """
     Query normalized assets (Domain, Subdomain, IP, Certificate-associated hostname)
     cataloged under an authorized assessment target.
     """
-    target = TargetService.get_target_by_id(db=db, target_id=target_id)
-    if not target:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Target with ID '{target_id}' not found.",
-        )
-
     items, total = AssetService.list_assets(
         db=db,
-        target_id=target_id,
+        target_id=target.id,
         asset_type=asset_type,
         skip=skip,
         limit=limit,
@@ -189,7 +239,7 @@ def get_target_assets(
     return AssetListResponse(
         items=[AssetResponse.model_validate(a) for a in items],
         total=total,
-        target_id=target_id,
+        target_id=target.id,
         asset_type_filter=asset_type,
         limit=limit,
         offset=skip,
@@ -202,23 +252,16 @@ def get_target_assets(
     summary="Get Specific Asset by ID",
 )
 def get_target_asset_by_id(
-    target_id: str,
     asset_id: str,
+    target: Target = Depends(get_authorized_target),
     db: Session = Depends(get_db),
 ) -> AssetResponse:
     """Retrieve details for a specific asset belonging to a target."""
-    target = TargetService.get_target_by_id(db=db, target_id=target_id)
-    if not target:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Target with ID '{target_id}' not found.",
-        )
-
-    asset = AssetService.get_asset_by_id(db=db, target_id=target_id, asset_id=asset_id)
+    asset = AssetService.get_asset_by_id(db=db, target_id=target.id, asset_id=asset_id)
     if not asset:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Asset with ID '{asset_id}' not found under target '{target_id}'.",
+            detail=f"Asset with ID '{asset_id}' not found under target '{target.id}'.",
         )
     return AssetResponse.model_validate(asset)
 
@@ -229,7 +272,6 @@ def get_target_asset_by_id(
     summary="List Detected Technologies for Target",
 )
 def get_target_technologies(
-    target_id: str,
     asset_id: Optional[str] = Query(None, description="Filter by associated asset ID"),
     category: Optional[str] = Query(
         None,
@@ -237,6 +279,7 @@ def get_target_technologies(
     ),
     skip: int = Query(0, ge=0, description="Offset"),
     limit: int = Query(100, ge=1, le=500, description="Page limit"),
+    target: Target = Depends(get_authorized_target),
     db: Session = Depends(get_db),
 ) -> TechnologyListResponse:
     """
@@ -245,7 +288,7 @@ def get_target_technologies(
     """
     items, total = TechnologyService.list_target_technologies(
         db=db,
-        target_id=target_id,
+        target_id=target.id,
         asset_id=asset_id,
         category=category,
         skip=skip,
@@ -254,7 +297,7 @@ def get_target_technologies(
     return TechnologyListResponse(
         items=[TechnologyResponse.model_validate(t) for t in items],
         total=total,
-        target_id=target_id,
+        target_id=target.id,
         asset_id=asset_id,
         category_filter=category,
         limit=limit,
@@ -268,18 +311,18 @@ def get_target_technologies(
     summary="List Semantic Graph Relationships for Target",
 )
 def get_target_relationships(
-    target_id: str,
     relationship_type: Optional[str] = Query(None, description="Filter by relationship_type"),
     source_type: Optional[str] = Query(None, description="Filter by source_type (target, asset, technology, evidence)"),
     target_type: Optional[str] = Query(None, description="Filter by target_type (asset, technology, evidence, external_entity)"),
     skip: int = Query(0, ge=0, description="Offset"),
     limit: int = Query(100, ge=1, le=500, description="Page limit"),
+    target: Target = Depends(get_authorized_target),
     db: Session = Depends(get_db),
 ) -> RelationshipListResponse:
     """Query semantic graph relationships mapped under an authorized target."""
     items, total = CorrelationService.list_target_relationships(
         db=db,
-        target_id=target_id,
+        target_id=target.id,
         relationship_type=relationship_type,
         source_type=source_type,
         target_type=target_type,
@@ -289,7 +332,7 @@ def get_target_relationships(
     return RelationshipListResponse(
         items=[RelationshipResponse.model_validate(r) for r in items],
         total=total,
-        target_id=target_id,
+        target_id=target.id,
         relationship_type_filter=relationship_type,
         source_type_filter=source_type,
         target_type_filter=target_type,
@@ -304,17 +347,17 @@ def get_target_relationships(
     summary="List Exposure Signals for Target",
 )
 def get_target_exposure_signals(
-    target_id: str,
     category: Optional[str] = Query(None, description="Filter by category"),
     confidence: Optional[float] = Query(None, ge=0.0, le=1.0, description="Filter by minimum confidence"),
     skip: int = Query(0, ge=0, description="Offset"),
     limit: int = Query(100, ge=1, le=500, description="Page limit"),
+    target: Target = Depends(get_authorized_target),
     db: Session = Depends(get_db),
 ) -> ExposureSignalListResponse:
     """Query factual security-relevant exposure signals identified under a target."""
     items, total = CorrelationService.list_target_exposure_signals(
         db=db,
-        target_id=target_id,
+        target_id=target.id,
         category=category,
         min_confidence=confidence,
         skip=skip,
@@ -323,7 +366,7 @@ def get_target_exposure_signals(
     return ExposureSignalListResponse(
         items=[ExposureSignalResponse.model_validate(s) for s in items],
         total=total,
-        target_id=target_id,
+        target_id=target.id,
         category_filter=category,
         min_confidence=confidence,
         limit=limit,
@@ -337,11 +380,11 @@ def get_target_exposure_signals(
     summary="Get Analyst-Oriented Exposure & Inventory Summary",
 )
 def get_analysis_summary(
-    target_id: str,
+    target: Target = Depends(get_authorized_target),
     db: Session = Depends(get_db),
 ) -> AnalysisSummaryResponse:
     """Retrieve deterministic counts of assets, technologies, evidence, relationships, signals, and findings."""
-    return CorrelationService.get_analysis_summary(db=db, target_id=target_id)
+    return CorrelationService.get_analysis_summary(db=db, target_id=target.id)
 
 
 @router.get(
@@ -350,14 +393,14 @@ def get_analysis_summary(
     summary="Get Target External Risk Assessment",
 )
 def get_target_risk(
-    target_id: str,
+    target: Target = Depends(get_authorized_target),
     db: Session = Depends(get_db),
 ) -> RiskAssessmentResponse:
     """
     Retrieve explainable, deterministic external risk posture assessment for an authorized target.
     Computed from verified configurations, email defenses, technology disclosures, and exposure signals.
     """
-    assessment = RiskService.get_target_risk(db=db, target_id=target_id)
+    assessment = RiskService.get_target_risk(db=db, target_id=target.id)
     return RiskAssessmentResponse.model_validate(assessment)
 
 
@@ -367,13 +410,13 @@ def get_target_risk(
     summary="List Prioritized Assets for Target",
 )
 def list_target_asset_priorities(
-    target_id: str,
     priority_level: Optional[str] = Query(
         None,
         description="Filter by priority level: p1_urgent, p2_high, p3_medium, p4_low",
     ),
     skip: int = Query(0, ge=0, description="Offset"),
     limit: int = Query(100, ge=1, le=500, description="Page limit"),
+    target: Target = Depends(get_authorized_target),
     db: Session = Depends(get_db),
 ) -> AssetRiskScoreListResponse:
     """
@@ -381,7 +424,7 @@ def list_target_asset_priorities(
     """
     items, total = RiskService.list_asset_priorities(
         db=db,
-        target_id=target_id,
+        target_id=target.id,
         priority_level=priority_level,
         skip=skip,
         limit=limit,
@@ -389,10 +432,9 @@ def list_target_asset_priorities(
     return AssetRiskScoreListResponse(
         items=[AssetRiskScoreResponse(**item) for item in items],
         total=total,
-        target_id=target_id,
+        target_id=target.id,
         priority_level_filter=priority_level,
         limit=limit,
         offset=skip,
     )
-
 

@@ -36,6 +36,7 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
 
   // Close on Escape key
   useEffect(() => {
+    if (!asset) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         onClose();
@@ -43,7 +44,7 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
+  }, [asset, onClose]);
 
   // Reset states & fetch real telemetry when selected asset changes
   useEffect(() => {

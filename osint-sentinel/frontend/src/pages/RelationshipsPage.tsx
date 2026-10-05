@@ -226,7 +226,7 @@ export const RelationshipsPage: React.FC = () => {
     <PageContainer>
       {/* Page Header */}
       <PageHeader
-        title="External Asset Relationships"
+        title="External Asset Relationship Graph"
         subtitle="Observed relationships connecting assets, evidence, technologies, and external references."
         badge={
           <span

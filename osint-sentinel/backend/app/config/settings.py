@@ -1,6 +1,6 @@
 from functools import lru_cache
 from typing import List
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -40,6 +40,15 @@ class Settings(BaseSettings):
     COLLECTION_TIMEOUT_SECONDS: float = 10.0
     MAX_ACTIVE_COLLECTION_ASSETS: int = 20
 
+    # Phase 11.6 Authentication
+    SESSION_SECRET: str = "development-secret-do-not-use-in-production"
+    SESSION_COOKIE_SECURE: bool = False  # False for local HTTP development
+    SESSION_COOKIE_SAMESITE: str = "lax"
+    OIDC_ISSUER: str = "https://auth.example.com/"
+    OIDC_CLIENT_ID: str = "mock-client-id"
+    OIDC_CLIENT_SECRET: str = "mock-client-secret"
+    OIDC_REDIRECT_URI: str = "http://localhost:8000/api/v1/auth/callback"
+
     @property
     def cors_origins(self) -> List[str]:
         """Convert comma-delimited allowed origins to a clean list."""
@@ -47,6 +56,12 @@ class Settings(BaseSettings):
             return []
         return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",") if origin.strip()]
 
+    @model_validator(mode="after")
+    def validate_production_security(self) -> 'Settings':
+        if self.ENVIRONMENT == "production":
+            if not self.SESSION_COOKIE_SECURE:
+                raise ValueError("SESSION_COOKIE_SECURE cannot be False in production.")
+        return self
 
 @lru_cache()
 def get_settings() -> Settings:

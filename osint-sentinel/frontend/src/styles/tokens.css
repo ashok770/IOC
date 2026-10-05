@@ -1,39 +1,39 @@
 :root {
-  /* Color Palette - Deep Obsidian & Charcoal Surfaces */
-  --color-bg-base: #0a0c10;
-  --color-bg-surface: #12161f;
-  --color-bg-surface-elevated: #181d29;
-  --color-bg-surface-hover: #1e2433;
-  --color-bg-surface-active: #242c3d;
+  /* Color Palette - Light Professional Surfaces */
+  --color-bg-base: #f8fafc;
+  --color-bg-surface: #ffffff;
+  --color-bg-surface-elevated: #ffffff;
+  --color-bg-surface-hover: #f1f5f9;
+  --color-bg-surface-active: #e2e8f0;
 
   /* Subtle Borders */
-  --color-border-subtle: #1e2638;
-  --color-border-strong: #2c364d;
-  --color-border-focus: #00c8e5;
+  --color-border-subtle: #e2e8f0;
+  --color-border-strong: #cbd5e1;
+  --color-border-focus: #0284c7;
 
   /* Typography / Text Colors */
-  --color-text-primary: #f0f4fc;
-  --color-text-secondary: #94a3b8;
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #475569;
   --color-text-muted: #64748b;
-  --color-text-inverse: #0a0c10;
+  --color-text-inverse: #ffffff;
 
-  /* Brand Accents - Restrained Cyan & Electric Violet */
-  --color-accent-cyan: #00c8e5;
-  --color-accent-cyan-subtle: rgba(0, 200, 229, 0.12);
-  --color-accent-cyan-hover: #00b4ce;
-  --color-accent-violet: #7c5cfc;
-  --color-accent-violet-subtle: rgba(124, 92, 252, 0.12);
-  --color-accent-violet-hover: #6a48f5;
+  /* Brand Accents - Restrained Blue/Cyan */
+  --color-accent-cyan: #0284c7;
+  --color-accent-cyan-subtle: rgba(2, 132, 199, 0.12);
+  --color-accent-cyan-hover: #0369a1;
+  --color-accent-violet: #4f46e5;
+  --color-accent-violet-subtle: rgba(79, 70, 229, 0.12);
+  --color-accent-violet-hover: #4338ca;
 
   /* Semantic Status Colors */
-  --color-status-success: #10b981;
-  --color-status-success-bg: rgba(16, 185, 129, 0.12);
-  --color-status-warning: #f59e0b;
-  --color-status-warning-bg: rgba(245, 158, 11, 0.12);
-  --color-status-high: #f97316;
-  --color-status-high-bg: rgba(249, 115, 22, 0.12);
-  --color-status-critical: #ef4444;
-  --color-status-critical-bg: rgba(239, 68, 68, 0.12);
+  --color-status-success: #059669;
+  --color-status-success-bg: rgba(5, 150, 105, 0.12);
+  --color-status-warning: #d97706;
+  --color-status-warning-bg: rgba(217, 119, 6, 0.12);
+  --color-status-high: #ea580c;
+  --color-status-high-bg: rgba(234, 88, 12, 0.12);
+  --color-status-critical: #dc2626;
+  --color-status-critical-bg: rgba(220, 38, 38, 0.12);
   --color-status-neutral: #64748b;
   --color-status-neutral-bg: rgba(100, 116, 139, 0.12);
 

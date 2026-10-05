@@ -82,7 +82,7 @@ export const IntelligencePipeline: React.FC<IntelligencePipelineProps> = ({
       id: 'assessment',
       order: '06',
       label: 'Exposure Heuristic',
-      countLabel: `${risk?.overall_score?.toFixed(1) ?? '8.0'} ${risk?.risk_level?.toUpperCase() ?? 'LOW'}`,
+      countLabel: risk ? `${risk.overall_score.toFixed(1)} ${risk.risk_level.toUpperCase()}` : '-- PENDING',
       detail: 'Deterministic evaluation',
       icon: '🛡️',
       to: '/risk',

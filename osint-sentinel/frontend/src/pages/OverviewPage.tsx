@@ -20,13 +20,14 @@ import { PageContainer, EmptyState, ErrorState } from '../components/common';
 import {
   AssessmentHeader,
   CollectionBanner,
-  PrimaryAssessmentSection,
-  IntelligenceSnapshot,
-  IntelligencePipeline,
-  PriorityInvestigationList,
-  AssetCompositionCard,
-  RelationshipStructureCard,
-  AssessmentIntegrityCard,
+  AssessmentSummary,
+  ExposureDriversChart,
+  AssetCompositionChart,
+  TechnologyOverview,
+  PriorityInvestigation,
+  RelationshipSnapshot,
+  RecentActivity,
+  MethodologySummary
 } from '../components/overview';
 
 export const OverviewPage: React.FC = () => {
@@ -63,20 +64,20 @@ export const OverviewPage: React.FC = () => {
         techRes,
         relsRes,
       ] = await Promise.all([
-        targetApi.getAnalysisSummary(targetId).catch(() => null),
-        riskApi.getTargetRisk(targetId).catch(() => null),
-        exposureApi.listExposureSignals(targetId).catch(() => ({ items: [] })),
-        assetApi.listTargetAssets(targetId).catch(() => ({ items: [] })),
-        technologyApi.listTargetTechnologies(targetId).catch(() => ({ items: [] })),
-        relationshipApi.listTargetRelationships(targetId).catch(() => ({ items: [] })),
+        targetApi.getAnalysisSummary(targetId),
+        riskApi.getTargetRisk(targetId),
+        exposureApi.listExposureSignals(targetId),
+        assetApi.listTargetAssets(targetId),
+        technologyApi.listTargetTechnologies(targetId),
+        relationshipApi.listTargetRelationships(targetId),
       ]);
 
       setSummary(summaryRes);
       setRisk(riskRes);
-      setExposureSignals(signalsRes?.items || []);
-      setAssets(assetsRes?.items || []);
-      setTechnologies(techRes?.items || []);
-      setRelationships(relsRes?.items || []);
+      setExposureSignals(signalsRes.items || []);
+      setAssets(assetsRes.items || []);
+      setTechnologies(techRes.items || []);
+      setRelationships(relsRes.items || []);
     } catch (err) {
       setDataError(
         err instanceof Error
@@ -135,68 +136,50 @@ export const OverviewPage: React.FC = () => {
 
   return (
     <PageContainer>
-      {/* SECTION 1: Target Header */}
       <AssessmentHeader
         target={selectedTarget}
         onRunAssessment={handleRunAssessment}
         isCollecting={isCollectionRunning}
       />
 
-      {/* Real-time Collection Progress & Completion Notification */}
       <CollectionBanner
         isRunning={isCollectionRunning}
         summary={collectionSummary}
         error={collectionError}
       />
 
-      {dataError ? (
+      {isLoadingData ? (
+        <div className="state-box">
+          <div className="state-spinner" aria-hidden="true" />
+          <span className="state-title">Loading assessment telemetry...</span>
+        </div>
+      ) : dataError ? (
         <ErrorState
           title="Assessment Telemetry Unavailable"
           message={dataError}
-          onRetry={() => selectedTarget && loadOverviewData(selectedTarget.id)}
+          onRetry={() => loadOverviewData(selectedTarget.id)}
         />
       ) : (
         <div className="overview-workspace-flow">
-          {/* SECTION 2 & 3: Primary Assessment & Contributing Factors */}
-          <PrimaryAssessmentSection risk={risk} isLoading={isLoadingData} />
-
-          {/* SECTION 4: Intelligence Snapshot */}
-          <IntelligenceSnapshot summary={summary} isLoading={isLoadingData} />
-
-          {/* SECTION 5: Intelligence Pipeline */}
-          <IntelligencePipeline
-            primaryDomain={selectedTarget.primary_domain}
-            summary={summary}
-            risk={risk}
-            isLoading={isLoadingData}
-          />
-
-          {/* Mid-Section Grid: Priority Investigation (Sec 7) & Relationships (Sec 9) */}
-          <div className="overview-mid-analytical-grid">
-            <PriorityInvestigationList
-              recommendations={risk?.recommendations || []}
-              exposureSignals={exposureSignals}
-              isLoading={isLoadingData}
-            />
-
-            <RelationshipStructureCard
-              primaryDomain={selectedTarget.primary_domain}
-              relationships={relationships}
-              assets={assets}
-              technologies={technologies}
-              isLoading={isLoadingData}
-            />
+          <AssessmentSummary summary={summary} risk={risk} />
+          
+          <div className="overview-grid-main">
+            <ExposureDriversChart risk={risk} />
+            <AssetCompositionChart assets={assets} />
+            <TechnologyOverview technologies={technologies} />
           </div>
 
-          {/* SECTION 6 & 8: Asset Intelligence & Perimeter Surface */}
-          <AssetCompositionCard
-            assets={assets}
-            primaryDomain={selectedTarget.primary_domain}
-            isLoading={isLoadingData}
-          />
+          <PriorityInvestigation signals={exposureSignals} />
 
-          {/* SECTION 10: Methodology & Provenance Strip */}
-          <AssessmentIntegrityCard />
+          <div className="overview-grid-secondary">
+            <RelationshipSnapshot 
+              relationships={relationships} 
+              assets={assets} 
+              technologies={technologies} 
+            />
+            <RecentActivity target={selectedTarget} summary={summary} />
+            <MethodologySummary />
+          </div>
         </div>
       )}
     </PageContainer>

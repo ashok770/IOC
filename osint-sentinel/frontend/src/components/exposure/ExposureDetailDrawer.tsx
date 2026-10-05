@@ -19,6 +19,7 @@ export const ExposureDetailDrawer: React.FC<ExposureDetailDrawerProps> = ({
 
   // Close on Escape key
   useEffect(() => {
+    if (!signal) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         onClose();
@@ -26,7 +27,7 @@ export const ExposureDetailDrawer: React.FC<ExposureDetailDrawerProps> = ({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
+  }, [signal, onClose]);
 
   if (!signal) return null;
 

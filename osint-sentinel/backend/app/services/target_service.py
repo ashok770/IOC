@@ -9,11 +9,13 @@ from app.schemas.target import TargetCreate
 
 class TargetService:
     @staticmethod
-    def create_target(db: Session, target_in: TargetCreate) -> Target:
+    def create_target(db: Session, target_in: TargetCreate, owner_id: str) -> Target:
         """Register a new assessment target."""
         existing = (
             db.query(Target)
             .filter(func.lower(Target.primary_domain) == target_in.primary_domain.lower())
+            # For this architecture, targets are globally unique by domain (across users)
+            # or unique per user. Assuming globally unique based on original unique index.
             .first()
         )
         if existing:
@@ -26,6 +28,7 @@ class TargetService:
             name=target_in.organization_name,
             primary_domain=target_in.primary_domain,
             assessment_status="pending",
+            owner_id=owner_id,
         )
         db.add(target)
         db.commit()
@@ -38,11 +41,15 @@ class TargetService:
         return db.query(Target).filter(Target.id == target_id).first()
 
     @staticmethod
-    def list_targets(db: Session, skip: int = 0, limit: int = 100) -> Tuple[List[Target], int]:
-        """List registered targets with pagination."""
-        total = db.query(func.count(Target.id)).scalar() or 0
+    def list_targets(db: Session, skip: int = 0, limit: int = 100, owner_id: str = None) -> Tuple[List[Target], int]:
+        """List registered targets with pagination, filtered by owner."""
+        query = db.query(Target)
+        if owner_id:
+            query = query.filter(Target.owner_id == owner_id)
+            
+        total = query.count()
         items = (
-            db.query(Target)
+            query
             .order_by(Target.created_at.desc())
             .offset(skip)
             .limit(limit)
