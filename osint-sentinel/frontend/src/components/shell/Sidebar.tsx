@@ -1,5 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
+import { useTarget } from '../../context/TargetContext';
+import { targetApi } from '../../api';
+import { AnalysisSummary } from '../../types';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -7,6 +10,16 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
+  const { selectedTarget } = useTarget();
+  const [summary, setSummary] = useState<AnalysisSummary | null>(null);
+
+  useEffect(() => {
+    if (selectedTarget) {
+      targetApi.getAnalysisSummary(selectedTarget.id).then(setSummary).catch(() => {});
+    } else {
+      setSummary(null);
+    }
+  }, [selectedTarget]);
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -78,7 +91,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 <line x1="2" y1="12" x2="22" y2="12" />
                 <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
               </svg>
-              <span>Assets</span>
+              <span style={{ flexGrow: 1 }}>Assets</span>
+              {summary && <span className="nav-badge" style={{ marginLeft: 'auto', background: summary.assets > 0 ? 'var(--color-bg-surface)' : 'transparent', color: summary.assets > 0 ? 'var(--color-text-primary)' : 'var(--color-text-muted)', padding: '2px 8px', borderRadius: '12px', fontSize: '12px', fontVariantNumeric: 'tabular-nums', border: summary.assets > 0 ? '1px solid var(--color-border-strong)' : '1px solid var(--color-border-subtle)' }}>{summary.assets}</span>}
             </NavLink>
 
             <NavLink
@@ -89,7 +103,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               <svg className="nav-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
               </svg>
-              <span>Exposure</span>
+              <span style={{ flexGrow: 1 }}>Exposure</span>
+              {summary && <span className="nav-badge" style={{ marginLeft: 'auto', background: summary.exposure_signals > 0 ? 'var(--color-bg-surface)' : 'transparent', color: summary.exposure_signals > 0 ? 'var(--color-text-primary)' : 'var(--color-text-muted)', padding: '2px 8px', borderRadius: '12px', fontSize: '12px', fontVariantNumeric: 'tabular-nums', border: summary.exposure_signals > 0 ? '1px solid var(--color-border-strong)' : '1px solid var(--color-border-subtle)' }}>{summary.exposure_signals}</span>}
             </NavLink>
 
             <NavLink
@@ -101,7 +116,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 <polyline points="16 18 22 12 16 6" />
                 <polyline points="8 6 2 12 8 18" />
               </svg>
-              <span>Technologies</span>
+              <span style={{ flexGrow: 1 }}>Technologies</span>
+              {summary && <span className="nav-badge" style={{ marginLeft: 'auto', background: summary.technologies > 0 ? 'var(--color-bg-surface)' : 'transparent', color: summary.technologies > 0 ? 'var(--color-text-primary)' : 'var(--color-text-muted)', padding: '2px 8px', borderRadius: '12px', fontSize: '12px', fontVariantNumeric: 'tabular-nums', border: summary.technologies > 0 ? '1px solid var(--color-border-strong)' : '1px solid var(--color-border-subtle)' }}>{summary.technologies}</span>}
             </NavLink>
 
             <NavLink
@@ -116,7 +132,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 <line x1="16" y1="17" x2="8" y2="17" />
                 <polyline points="10 9 9 9 8 9" />
               </svg>
-              <span>Evidence</span>
+              <span style={{ flexGrow: 1 }}>Evidence</span>
+              {summary && <span className="nav-badge" style={{ marginLeft: 'auto', background: summary.evidence_items > 0 ? 'var(--color-bg-surface)' : 'transparent', color: summary.evidence_items > 0 ? 'var(--color-text-primary)' : 'var(--color-text-muted)', padding: '2px 8px', borderRadius: '12px', fontSize: '12px', fontVariantNumeric: 'tabular-nums', border: summary.evidence_items > 0 ? '1px solid var(--color-border-strong)' : '1px solid var(--color-border-subtle)' }}>{summary.evidence_items}</span>}
             </NavLink>
 
             <NavLink
@@ -131,7 +148,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
                 <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
               </svg>
-              <span>Relationships</span>
+              <span style={{ flexGrow: 1 }}>Relationships</span>
+              {summary && <span className="nav-badge" style={{ marginLeft: 'auto', background: summary.relationships > 0 ? 'var(--color-bg-surface)' : 'transparent', color: summary.relationships > 0 ? 'var(--color-text-primary)' : 'var(--color-text-muted)', padding: '2px 8px', borderRadius: '12px', fontSize: '12px', fontVariantNumeric: 'tabular-nums', border: summary.relationships > 0 ? '1px solid var(--color-border-strong)' : '1px solid var(--color-border-subtle)' }}>{summary.relationships}</span>}
             </NavLink>
 
             <NavLink
@@ -183,12 +201,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         </nav>
 
         {/* Operational Scope Guardrail Footer */}
-        <div className="sidebar-footer">
-          <div className="sidebar-footer-mode">
-            <span className="mode-dot" aria-hidden="true" />
-            <span>Passive Only</span>
+        <div className="sidebar-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', padding: '16px', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+            <div className="tooltip-container" style={{ display: 'flex', alignItems: 'center' }}>
+              <span className="status-dot online"></span>
+              <span className="tooltip-text" style={{ bottom: '100%', left: '0' }}>API Online / DB Connected</span>
+            </div>
+            <span style={{ fontSize: '12px', fontWeight: 500, color: 'var(--color-text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Passive Only</span>
           </div>
-          <span>v0.1.0</span>
+          <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>v0.1.0</span>
         </div>
       </aside>
     </>

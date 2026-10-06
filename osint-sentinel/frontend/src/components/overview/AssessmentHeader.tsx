@@ -1,6 +1,5 @@
 import React from 'react';
 import { Target } from '../../types';
-import { StatusBadge, StatusBadgeVariant } from '../common/StatusBadge';
 import '../../styles/overview.css';
 
 interface AssessmentHeaderProps {
@@ -18,64 +17,63 @@ export const AssessmentHeader: React.FC<AssessmentHeaderProps> = ({
     await onRunAssessment();
   };
 
-  const getStatusVariant = (status: string): StatusBadgeVariant => {
-    switch (status.toLowerCase()) {
-      case 'completed': return 'success';
-      case 'in_progress': return 'cyan';
-      case 'partial': return 'warning';
-      case 'failed': return 'critical';
-      default: return 'neutral';
-    }
+  const renderLastAssessed = () => {
+    if (!target.updated_at && !target.created_at) return 'Unknown';
+    const dateStr = target.updated_at || target.created_at;
+    const date = new Date(dateStr);
+    
+    const formatted = new Intl.DateTimeFormat('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZoneName: 'short'
+    }).format(date);
+    
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    let relative = '';
+    if (diffDays === 0) relative = '(today)';
+    else if (diffDays === 1) relative = '(1 day ago)';
+    else relative = `(${diffDays} days ago)`;
+
+    const isStale = diffMs > 24 * 60 * 60 * 1000;
+
+    return (
+      <div className="last-assessed-container" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <span className="header-meta" style={{ fontSize: '14px', color: 'var(--color-text-secondary)' }}>Last assessed: {formatted} {relative}</span>
+        {isStale && <span className="stale-badge" style={{ backgroundColor: 'var(--color-status-warning)', color: '#fff', fontSize: '12px', padding: '2px 8px', borderRadius: '12px', fontWeight: 'bold' }}>Data may be stale</span>}
+      </div>
+    );
   };
 
-  const formattedDate = target.updated_at
-    ? new Date(target.updated_at).toUTCString()
-    : new Date(target.created_at).toUTCString();
-
   return (
-    <div className="assessment-header-light">
-      <div className="header-eyebrow-row">
-        <span className="header-eyebrow">EXTERNAL EXPOSURE ASSESSMENT</span>
-      </div>
-      
-      <div className="header-title-row">
-        <h1 className="header-domain monospace">{target.primary_domain}</h1>
-        <StatusBadge
-          label={target.assessment_status}
-          variant={getStatusVariant(target.assessment_status)}
-        />
-      </div>
-      
-      <div className="header-subtitle-row">
-        {target.name && <span className="header-org">{target.name} &bull;</span>}
-        <span className="header-meta">Last assessed: {formattedDate}</span>
-      </div>
-      <div className="header-id-row">
-        <span className="header-meta monospace">Target ID: {target.id}</span>
-      </div>
-      
-      <div className="header-details-grid">
-        <div className="header-detail-item">
-          <div className="detail-label">Assessment Mode</div>
-          <div className="detail-value">Authorized / Passive</div>
+    <div className="assessment-header-light" style={{ paddingBottom: '0' }}>
+      <div className="header-main-flex" style={{ borderBottom: 'none', paddingBottom: 'var(--space-2)' }}>
+        <div className="header-content-left">
+          <h1 style={{ fontSize: '28px', fontWeight: 700, color: 'var(--color-text-primary)', margin: '0 0 8px 0', letterSpacing: '-0.5px' }}>Overview</h1>
+          <div className="header-subtitle-row">
+            {renderLastAssessed()}
+          </div>
+
+          <div className="header-compact-metadata" style={{ marginTop: '16px', display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <span className="metadata-pill" style={{ fontSize: '12px', color: 'var(--color-text-secondary)', background: 'var(--color-bg-base)', padding: '2px 8px', borderRadius: '4px', border: '1px solid var(--color-border-subtle)' }}>Authorized / Passive</span>
+            <span className="metadata-pill" style={{ fontSize: '12px', color: 'var(--color-text-secondary)', background: 'var(--color-bg-base)', padding: '2px 8px', borderRadius: '4px', border: '1px solid var(--color-border-subtle)' }}>Zero Exploitation / Read-Only OSINT</span>
+            <span className="metadata-pill" style={{ fontSize: '12px', color: 'var(--color-text-secondary)', background: 'var(--color-bg-base)', padding: '2px 8px', borderRadius: '4px', border: '1px solid var(--color-border-subtle)' }}>DNS &bull; RDAP &bull; CT &bull; HTTP</span>
+          </div>
         </div>
-        <div className="header-detail-item">
-          <div className="detail-label">Execution Policy</div>
-          <div className="detail-value">Zero Exploitation / Read-Only OSINT</div>
-        </div>
-        <div className="header-detail-item">
-          <div className="detail-label">Data Sources</div>
-          <div className="detail-value">DNS &bull; RDAP &bull; CT &bull; HTTP</div>
-        </div>
-        
-        <div className="header-actions">
+
+        <div className="header-actions" style={{ alignSelf: 'flex-start', marginTop: '4px' }}>
           <button
             type="button"
-            className="btn btn-primary btn-large"
+            className="btn btn-primary"
             onClick={handleRun}
             disabled={isCollecting}
           >
-            {isCollecting ? 'COLLECTING...' : 'RUN PASSIVE SCAN'}
+            {isCollecting ? 'COLLECTING...' : 'Run passive scan'}
           </button>
         </div>
       </div>

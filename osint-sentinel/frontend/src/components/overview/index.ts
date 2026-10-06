@@ -1,5 +1,6 @@
 export * from './AssessmentHeader';
-export * from './CollectionBanner';
+export * from './AssessmentGauge';
+export * from './AssessmentProgressModal';
 export * from './AssessmentSummary';
 export * from './ExposureDriversChart';
 export * from './AssetCompositionChart';
