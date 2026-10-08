@@ -27,6 +27,29 @@ class AuditService:
         }
 
     @staticmethod
+    def _sanitize_metadata(val: Any) -> Any:
+        """Recursively sanitizes sensitive credential fields from audit metadata."""
+        SENSITIVE_KEYWORDS = {
+            "password", "token", "secret", "cookie", "session",
+            "authorization", "auth", "api_key", "apikey", "code",
+            "state", "nonce", "private_key", "credentials"
+        }
+
+        if isinstance(val, dict):
+            sanitized = {}
+            for k, v in val.items():
+                k_str = str(k)
+                k_lower = k_str.lower()
+                if any(keyword in k_lower for keyword in SENSITIVE_KEYWORDS):
+                    sanitized[k_str] = "[REDACTED]"
+                else:
+                    sanitized[k_str] = AuditService._sanitize_metadata(v)
+            return sanitized
+        elif isinstance(val, list):
+            return [AuditService._sanitize_metadata(item) for item in val]
+        return val
+
+    @staticmethod
     def log(
         db: Session,
         action: AuditAction,
@@ -42,13 +65,8 @@ class AuditService:
         """
         req_context = AuditService.extract_request_context(request) if request else {}
         
-        # Strip potentially sensitive fields from metadata if any were passed by accident
-        safe_metadata = None
-        if metadata:
-            safe_metadata = {
-                k: v for k, v in metadata.items()
-                if k.lower() not in ["password", "token", "secret", "cookie", "session_id", "authorization_code"]
-            }
+        # Recursively sanitize metadata to remove sensitive credentials or tokens
+        safe_metadata = AuditService._sanitize_metadata(metadata) if metadata else None
 
         try:
             audit_record = AuditLog(

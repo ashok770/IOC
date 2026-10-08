@@ -59,6 +59,11 @@ def create_application() -> FastAPI:
         openapi_url="/openapi.json",
     )
 
+    from starlette.middleware.sessions import SessionMiddleware
+
+    # Session Middleware for OIDC flow state & nonce management
+    app.add_middleware(SessionMiddleware, secret_key=settings.SESSION_SECRET)
+
     # CORS configuration
     if settings.cors_origins:
         app.add_middleware(

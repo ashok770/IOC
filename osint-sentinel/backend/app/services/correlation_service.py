@@ -92,6 +92,7 @@ class CorrelationService:
         assets: List[Asset],
         technologies: List[Technology],
         relationships: List[Relationship],
+        evidence_items: Optional[List[EvidenceItem]] = None,
     ) -> List[ExposureSignal]:
         """
         Executes ExposureAnalyzer, persists signals, and links them to findings.
@@ -102,7 +103,9 @@ class CorrelationService:
             assets=assets,
             technologies=technologies,
             relationships=relationships,
+            evidence_items=evidence_items,
         )
+
 
         saved_signals: List[ExposureSignal] = []
 

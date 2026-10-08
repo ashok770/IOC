@@ -9,6 +9,12 @@ from app.models.finding import Finding
 from app.models.user import User
 from app.models.session import UserSession
 from app.models.audit import AuditLog
+from app.models.assessment_run import (
+    AssessmentRun,
+    AssessmentRunAsset,
+    AssessmentRunTechnology,
+    AssessmentRunExposureSignal,
+)
 
 __all__ = [
     "Target",
@@ -23,4 +29,8 @@ __all__ = [
     "User",
     "UserSession",
     "AuditLog",
+    "AssessmentRun",
+    "AssessmentRunAsset",
+    "AssessmentRunTechnology",
+    "AssessmentRunExposureSignal",
 ]

@@ -9,3 +9,9 @@ export * from './PriorityInvestigation';
 export * from './RelationshipSnapshot';
 export * from './MethodologySummary';
 export * from './RecentActivity';
+export * from './EmailSecurityCard';
+export * from './CertificateIntelligenceCard';
+export * from './ExternalDependenciesCard';
+
+
+

@@ -24,7 +24,10 @@ oauth.register(
     server_metadata_url=f"{settings.OIDC_ISSUER}.well-known/openid-configuration" if not settings.OIDC_ISSUER.endswith("/") else f"{settings.OIDC_ISSUER}.well-known/openid-configuration",
     client_id=settings.OIDC_CLIENT_ID,
     client_secret=settings.OIDC_CLIENT_SECRET,
-    client_kwargs={"scope": "openid email profile"},
+    client_kwargs={
+        "scope": "openid email profile",
+        "code_challenge_method": "S256",
+    },
 )
 
 class UserProfileResponse(BaseModel):
@@ -146,7 +149,7 @@ async def dev_login(request: Request, db: Session = Depends(get_db)):
     """
     if settings.ENVIRONMENT != "development":
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail="Development login is disabled in this environment.",
         )
 
@@ -198,6 +201,7 @@ async def logout(
 
     response.delete_cookie(
         key="session_id",
+        httponly=True,
         secure=settings.SESSION_COOKIE_SECURE,
         samesite=settings.SESSION_COOKIE_SAMESITE,
         path="/"

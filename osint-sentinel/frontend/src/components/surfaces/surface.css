@@ -1,0 +1,62 @@
+/* Surface System - OSINT Sentinel Editorial Intelligence */
+
+.ds-surface-section {
+  width: 100%;
+  padding: var(--ds-space-16) var(--ds-space-8);
+  position: relative;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .ds-surface-section {
+    padding: var(--ds-space-8) var(--ds-space-4);
+  }
+}
+
+/* 1. Warm Paper Surface (Primary Editorial Surface) */
+.ds-surface-paper-section {
+  background-color: var(--ds-color-paper);
+  color: var(--ds-color-graphite);
+  /* Very subtle paper texture via SVG radial gradient & noise overlay */
+  background-image: radial-gradient(rgba(17, 24, 39, 0.02) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* 2. White Surface (Secondary Section) */
+.ds-surface-white-section {
+  background-color: var(--ds-color-white);
+  color: var(--ds-color-graphite);
+  border-top: 1px solid var(--ds-color-border-neutral);
+  border-bottom: 1px solid var(--ds-color-border-neutral);
+}
+
+/* 3. Soft Blue Supporting Surface */
+.ds-surface-softblue-section {
+  background-color: var(--ds-color-soft-blue);
+  color: var(--ds-color-graphite);
+  border-top: 1px solid rgba(37, 99, 235, 0.12);
+  border-bottom: 1px solid rgba(37, 99, 235, 0.12);
+}
+
+/* 4. Obsidian Surface (Dark Technical Command Surface) */
+.ds-surface-dark-section {
+  background-color: var(--ds-color-obsidian);
+  color: var(--ds-color-white);
+  background-image: radial-gradient(circle at 50% 0%, rgba(37, 99, 235, 0.08) 0%, transparent 70%);
+}
+
+/* 5. Intelligence Surface (Deepest Technical Surface with Subtle Grid) */
+.ds-surface-intelligence-section {
+  background-color: #0D0F14;
+  color: var(--ds-color-white);
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.ds-surface-container {
+  max-width: 1240px;
+  margin: 0 auto;
+  width: 100%;
+}

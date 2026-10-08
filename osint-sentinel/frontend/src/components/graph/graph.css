@@ -1,0 +1,90 @@
+/* Graph System - OSINT Sentinel Editorial Intelligence */
+
+.ds-graph-node {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background-color: var(--ds-color-obsidian);
+  color: var(--ds-color-white);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--ds-radius-sm);
+  font-family: var(--ds-font-mono);
+  font-size: 0.8125rem;
+  user-select: none;
+  cursor: pointer;
+  transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.ds-graph-node:hover {
+  transform: translateY(-2px);
+  border-color: var(--ds-color-cobalt);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+}
+
+.ds-graph-node-active {
+  border-color: var(--ds-color-cobalt);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3);
+  background-color: #161B26;
+}
+
+.ds-graph-node-highlighted {
+  border-color: var(--ds-color-indigo);
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.3);
+}
+
+.ds-node-icon {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ds-color-cobalt);
+}
+
+.ds-node-type-label {
+  font-family: var(--ds-font-sans);
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.65;
+}
+
+/* Graph Labels and Evidence Markers */
+.ds-evidence-marker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--ds-font-mono);
+  font-size: 0.6875rem;
+  padding: 3px 8px;
+  border-radius: var(--ds-radius-sm);
+  background-color: var(--ds-color-soft-blue);
+  color: var(--ds-color-cobalt);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+}
+
+.ds-graph-label {
+  font-family: var(--ds-font-mono);
+  font-size: 0.6875rem;
+  color: var(--ds-color-text-muted);
+  letter-spacing: 0.02em;
+}
+
+.ds-datapoint {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--ds-color-cobalt);
+}
+
+.ds-connection-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--ds-font-mono);
+  font-size: 0.75rem;
+}

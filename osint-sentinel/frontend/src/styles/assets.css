@@ -1284,3 +1284,47 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ------------------------------------------------------------------------------
+   Asset Investigation Visual Intelligence Styles
+   ------------------------------------------------------------------------------ */
+.investigation-workspace {
+  width: 100%;
+}
+
+.investigation-columns {
+  display: flex;
+  gap: var(--space-6);
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.telemetry-observation-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: var(--space-5);
+}
+
+.evidence-provenance-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: var(--space-5);
+}
+
+@media (max-width: 960px) {
+  .telemetry-observation-grid,
+  .evidence-provenance-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 840px) {
+  .investigation-columns {
+    flex-direction: column;
+  }
+  .column-main,
+  .column-side {
+    flex: 1 1 100% !important;
+    width: 100% !important;
+  }
+}

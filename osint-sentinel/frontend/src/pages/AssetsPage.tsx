@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTarget } from '../context/TargetContext';
 import { assetApi } from '../api';
 import { Asset } from '../types';
@@ -6,7 +7,6 @@ import { PageContainer, PageHeader, EmptyState, ErrorState } from '../components
 import {
   AssetToolbar,
   AssetTable,
-  AssetDetailDrawer,
   AssetSummaryStrip,
   SortField,
   SortOrder,
@@ -34,8 +34,7 @@ export const AssetsPage: React.FC = () => {
   const [sortField, setSortField] = useState<SortField>('last_seen_at');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
 
-  // Selected asset for investigation detail drawer
-  const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
+  const navigate = useNavigate();
 
   // Load assets strictly scoped to the active target
   const loadAssets = useCallback(async (targetId: string) => {
@@ -60,7 +59,6 @@ export const AssetsPage: React.FC = () => {
   useEffect(() => {
     // Immediately clear previous target's data to prevent cross-target leakage
     setAssets([]);
-    setSelectedAsset(null);
     setSearchQuery('');
     setSelectedType('all');
     setSelectedScope('all');
@@ -270,8 +268,8 @@ export const AssetsPage: React.FC = () => {
             <AssetTable
               assets={filteredAssets}
               primaryDomain={selectedTarget.primary_domain}
-              selectedAsset={selectedAsset}
-              onSelectAsset={(a) => setSelectedAsset(a)}
+              selectedAsset={null}
+              onSelectAsset={(a) => navigate(`/assets/${a.id}`)}
               sortField={sortField}
               sortOrder={sortOrder}
               onSort={handleSort}
@@ -279,14 +277,6 @@ export const AssetsPage: React.FC = () => {
           )}
         </div>
       )}
-
-      {/* SECTION 4 — Redesigned Asset Detail Drawer */}
-      <AssetDetailDrawer
-        asset={selectedAsset}
-        primaryDomain={selectedTarget.primary_domain}
-        allAssets={assets}
-        onClose={() => setSelectedAsset(null)}
-      />
     </PageContainer>
   );
 };

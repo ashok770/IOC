@@ -12,6 +12,7 @@ class AnalysisFinding(BaseModel):
     severity: str = Field("info", description="Severity level, strictly 'info' for Phase 2 observations")
     confidence: float = Field(1.0, ge=0.0, le=1.0, description="Evidentiary confidence")
     evidence_type: Optional[str] = None
+    evidence_id: Optional[str] = None
 
 
 class DomainAnalyzer:

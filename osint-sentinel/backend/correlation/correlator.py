@@ -236,14 +236,45 @@ class CorrelationEngine:
                             )
                         )
 
+                # TXT record: Domain -> SPF include external delegations
+                elif record_type == "TXT" or "v=spf1" in str(data.get("value", "")).lower():
+                    raw_val = str(data.get("value", ""))
+                    if "v=spf1" in raw_val.lower():
+                        from analyzers.email_analyzer import EmailAnalyzer
+                        intel = EmailAnalyzer().analyze(target_domain_lower, [evidence])
+                        for inc in intel.spf.includes:
+                            inc_clean = inc.lower().strip().rstrip(".")
+                            if inc_clean:
+                                is_internal = is_in_target_namespace(inc_clean, target_domain_lower)
+                                rel_type = "references" if is_internal else "externally_referenced"
+                                target_asset = asset_by_value.get(inc_clean)
+                                target_type = "asset" if target_asset else "external_entity"
+                                target_id_ref = target_asset.id if target_asset else inc_clean
+
+                                add_relationship(
+                                    CorrelatedRelationship(
+                                        source_type="asset",
+                                        source_id=source_id,
+                                        relationship_type=rel_type,
+                                        target_type=target_type,
+                                        target_id_reference=target_id_ref,
+                                        evidence_id=evidence.id,
+                                        confidence=0.95,
+                                        extra_data={"role": "spf_include", "target_owned": is_internal},
+                                    )
+                                )
+
+
         # ---------------------------------------------------------------------
         # 4. Certificate Transparency Correlations (certificate_associated_with)
         # ---------------------------------------------------------------------
         for evidence in evidence_items:
-            if evidence.evidence_type != "certificate_transparency":
+            if evidence.evidence_type not in ("certificate_transparency", "certificate_log_sample", "certificate_entry", "certificate_hostnames"):
                 continue
             data = evidence.data or {}
-            cert_list = data.get("certificates", []) if isinstance(data, dict) else (data if isinstance(data, list) else [])
+            cert_list = data.get("sample_entries") or data.get("certificates") or []
+            if not cert_list and "discovered_hostnames" in data:
+                cert_list = data.get("discovered_hostnames", [])
             for cert in cert_list:
                 names = set()
                 if isinstance(cert, dict):

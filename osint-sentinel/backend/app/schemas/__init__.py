@@ -15,6 +15,12 @@ from app.schemas.risk import (
     RiskFactor,
     Recommendation,
 )
+from app.schemas.assessment_run import (
+    AssessmentRunResponse,
+    AssessmentRunListResponse,
+    AssessmentRunDetailResponse,
+    AssessmentComparisonResponse,
+)
 
 __all__ = [
     "HealthResponse",
@@ -41,4 +47,8 @@ __all__ = [
     "FindingResponse",
     "FindingListResponse",
     "CollectionSummaryResponse",
+    "AssessmentRunResponse",
+    "AssessmentRunListResponse",
+    "AssessmentRunDetailResponse",
+    "AssessmentComparisonResponse",
 ]

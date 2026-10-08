@@ -111,118 +111,61 @@ class DeterministicRiskScorer:
         # ---------------------------------------------------------------------
         # 2. Email Defense Posture Scoring (Max: 30.0)
         # Audit Requirement: DNS query failed != SPF/DMARC missing
+        # Uses structured EmailAnalyzer results; no inline regex parsing
         # ---------------------------------------------------------------------
-        spf_evidence_id = None
-        dmarc_evidence_id = None
-        spf_record = None
-        dmarc_record = None
-        
-        # Track whether apex TXT and DMARC queries were actually executed successfully
-        apex_txt_queried = False
-        dmarc_queried = False
-        dns_available = False
+        from analyzers.email_analyzer import EmailAnalyzer
+        email_intel = EmailAnalyzer().analyze(target.primary_domain, evidence_items)
+        spf_info = email_intel.spf
+        dmarc_info = email_intel.dmarc
 
-        for ev in evidence_items:
-            if ev.evidence_type == "dns_record":
-                dns_available = True
-                data = ev.data or {}
-                domain_val = data.get("domain", "").lower()
-                rec_type = data.get("record_type")
-                is_no_record = data.get("status") == "no_record" or data.get("query_performed") is True
-
-                if rec_type == "TXT":
-                    # Check if apex domain TXT was queried
-                    if domain_val == target.primary_domain.lower() or not domain_val.startswith("_dmarc"):
-                        apex_txt_queried = True
-                        if is_no_record and not spf_evidence_id:
-                            spf_evidence_id = ev.id
-
-                    # Check if _dmarc.<domain> was queried
-                    if domain_val.startswith("_dmarc") or data.get("subdomain_type") == "dmarc":
-                        dmarc_queried = True
-                        if is_no_record and not dmarc_evidence_id:
-                            dmarc_evidence_id = ev.id
-
-                    # Parse values
-                    raw_val = data.get("value")
-                    txt_list = [raw_val] if isinstance(raw_val, str) else (raw_val if isinstance(raw_val, list) else [])
-                    
-                    # Also handle grouped format where "TXT" is a key in data
-                    if "TXT" in data:
-                        grouped_txt = data["TXT"]
-                        txt_list.extend(grouped_txt if isinstance(grouped_txt, list) else [grouped_txt])
-                        apex_txt_queried = True
-
-                    for entry in txt_list:
-                        if not entry:
-                            continue
-                        text_str = str(entry).strip().lower()
-                        if text_str.startswith("v=spf1") and not spf_record:
-                            spf_record = text_str
-                            spf_evidence_id = ev.id
-                        elif "v=dmarc1" in text_str and not dmarc_record:
-                            dmarc_record = text_str
-                            dmarc_evidence_id = ev.id
-                            dmarc_queried = True
-
-        # If apex DNS records exist (A, AAAA, NS, SOA, etc.), consider DNS query as attempted
-        if not apex_txt_queried and dns_available:
-            # Check if any DNS records for the domain were collected successfully
-            apex_txt_queried = any(
-                ev.evidence_type == "dns_record" and (ev.data or {}).get("domain", "").lower() == target.primary_domain.lower()
-                for ev in evidence_items
-            )
-
-        # Evaluate SPF only if apex TXT query was executed successfully
-        if apex_txt_queried:
-            if not spf_record:
+        if spf_info.query_executed:
+            if not spf_info.present:
                 factors_breakdown["email_defense_posture"] += 15.0
                 recommendations.append({
                     "priority": "P2_high",
                     "category": "email_defense",
                     "title": "Missing SPF Record",
-                    "evidence_id": spf_evidence_id,
+                    "evidence_id": spf_info.evidence_id,
                     "action": "Publish a valid SPF (Sender Policy Framework) TXT record specifying authorized sending mail servers with a strict '-all' qualifier.",
                     "rationale": "The authoritative nameserver returned no SPF record for the apex domain, permitting unauthorized senders to forge mail from this domain.",
                     "recommended_investigation": "Review mail routing architecture and implement an authorized SPF record to protect domain reputation.",
                 })
-            elif "+all" in spf_record or "?all" in spf_record:
+            elif spf_info.all_qualifier in ("+all", "?all"):
                 factors_breakdown["email_defense_posture"] += 10.0
                 recommendations.append({
                     "priority": "P3_medium",
                     "category": "email_defense",
                     "title": "Permissive SPF Policy (+all or ?all)",
-                    "evidence_id": spf_evidence_id,
+                    "evidence_id": spf_info.evidence_id,
                     "action": "Update SPF policy from permissive qualifiers (+all or ?all) to hard fail ('-all') or soft fail ('~all').",
                     "rationale": "Lax SPF qualifiers instruct receivers to treat unverified senders permissively, significantly weakening spoofing protection.",
                     "recommended_investigation": "Audit SPF sending IP mechanisms and restrict policy to designated relays.",
                 })
-            elif "~all" in spf_record:
+            elif spf_info.all_qualifier == "~all":
                 factors_breakdown["email_defense_posture"] += 3.0
             # "-all" receives 0.0 penalty (optimal posture)
         else:
             logger.info(f"Target {target.id}: Apex TXT DNS query was not executed or failed; skipping SPF penalty.")
 
-        # Evaluate DMARC only if DMARC query was executed successfully
-        if dmarc_queried or (apex_txt_queried and dmarc_record):
-            if not dmarc_record:
+        if dmarc_info.query_executed or (spf_info.query_executed and dmarc_info.present):
+            if not dmarc_info.present:
                 factors_breakdown["email_defense_posture"] += 15.0
                 recommendations.append({
                     "priority": "P2_high",
                     "category": "email_defense",
                     "title": "Missing DMARC Policy",
-                    "evidence_id": dmarc_evidence_id,
+                    "evidence_id": dmarc_info.evidence_id,
                     "action": "Configure a _dmarc TXT record with at least 'p=none' for aggregate reporting, progressing toward 'p=quarantine' or 'p=reject'.",
                     "rationale": "Authoritative nameservers confirmed no DMARC record at _dmarc; receiving mail servers lack instructions on handling unauthenticated messages.",
                     "recommended_investigation": "Publish a DMARC policy with a valid rua/ruf mailbox to monitor email spoofing telemetry.",
                 })
-            elif "p=none" in dmarc_record:
+            elif dmarc_info.policy == "none":
                 factors_breakdown["email_defense_posture"] += 8.0
                 recommendations.append({
                     "priority": "P3_medium",
                     "category": "email_defense",
                     "title": "Non-Enforcing DMARC Policy (p=none)",
-                    "evidence_id": dmarc_evidence_id,
+                    "evidence_id": dmarc_info.evidence_id,
                     "action": "Graduate DMARC policy from 'p=none' (reporting mode) to 'p=quarantine' or 'p=reject' once legitimate sending sources are validated.",
                     "rationale": "A DMARC policy with 'p=none' collects telemetry but does not instruct receivers to reject or quarantine fraudulent messages.",
                     "recommended_investigation": "Analyze DMARC aggregate reports to confirm all legitimate senders are aligned before enforcing p=reject.",
@@ -232,6 +175,7 @@ class DeterministicRiskScorer:
             logger.info(f"Target {target.id}: DMARC DNS query was not executed or failed; skipping DMARC penalty.")
 
         factors_breakdown["email_defense_posture"] = min(30.0, factors_breakdown["email_defense_posture"])
+
 
         # ---------------------------------------------------------------------
         # 3. Technology Disclosure Scoring (Max: 20.0)

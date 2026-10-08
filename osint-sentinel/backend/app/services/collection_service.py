@@ -51,9 +51,24 @@ class CollectionService:
                     detail=f"Target with ID '{target_id}' not found.",
                 )
 
-            # Update target status to in_progress
+            # Create AssessmentRun record
+            from app.models.assessment_run import (
+                AssessmentRun,
+                AssessmentRunAsset,
+                AssessmentRunTechnology,
+                AssessmentRunExposureSignal,
+            )
+            from app.models.risk_assessment import RiskAssessment, AssetRiskScore
+
+            run_record = AssessmentRun(
+                target_id=target.id,
+                status="in_progress",
+                started_at=datetime.now(timezone.utc),
+            )
+            db.add(run_record)
             target.assessment_status = "in_progress"
             db.commit()
+            db.refresh(run_record)
 
             try:
                 context = AssessmentContext(target_id=target.id)
@@ -102,15 +117,30 @@ class CollectionService:
                     assets=cataloged_assets,
                 )
 
-                # 5. Execute Factual Observations Analysis
+                # 5. Execute Factual Observations Analysis & Email Intelligence Analysis
                 findings = self.domain_analyzer.analyze(
                     target.primary_domain,
                     collector_result.evidence_results,
                 )
+                from analyzers.email_analyzer import EmailAnalyzer
+                email_intel = EmailAnalyzer().analyze(
+                    target.primary_domain,
+                    evidence_entities,
+                )
+                findings.extend(email_intel.findings)
+
+                from analyzers.certificate_analyzer import CertificateAnalyzer
+                cert_intel = CertificateAnalyzer().analyze(
+                    target.primary_domain,
+                    evidence_entities,
+                )
+                findings.extend(cert_intel.findings)
 
                 # 6. Persist Findings
                 for f in findings:
-                    evidence_id = evidence_type_map.get(f.evidence_type) if f.evidence_type else None
+                    evidence_id = getattr(f, "evidence_id", None) or (
+                        evidence_type_map.get(f.evidence_type) if getattr(f, "evidence_type", None) else None
+                    )
                     finding_record = Finding(
                         target_id=target.id,
                         category=f.category,
@@ -134,6 +164,34 @@ class CollectionService:
                     technologies=cataloged_technologies,
                 )
 
+                # Execute External Dependency Intelligence Analysis
+                from analyzers.external_dependency_analyzer import ExternalDependencyAnalyzer
+                ext_intel = ExternalDependencyAnalyzer().analyze(
+                    target_domain=target.primary_domain,
+                    target_id=target.id,
+                    evidence=evidence_entities,
+                    relationships=created_relationships,
+                    technologies=cataloged_technologies,
+                    email_intel=email_intel,
+                    cert_intel=cert_intel,
+                )
+                for f in ext_intel.findings:
+                    evidence_id = getattr(f, "evidence_id", None) or (
+                        evidence_type_map.get(f.evidence_type) if getattr(f, "evidence_type", None) else None
+                    )
+                    db.add(
+                        Finding(
+                            target_id=target.id,
+                            category=f.category,
+                            title=f.title,
+                            description=f.description,
+                            severity=f.severity,
+                            confidence=f.confidence,
+                            evidence_id=evidence_id,
+                        )
+                    )
+                db.commit()
+
                 # 8. Evaluate Exposure Signals (persists signals and corresponding informational findings)
                 created_signals = CorrelationService.evaluate_and_sync_exposure_signals(
                     db=db,
@@ -141,11 +199,13 @@ class CollectionService:
                     assets=cataloged_assets,
                     technologies=cataloged_technologies,
                     relationships=created_relationships,
+                    evidence_items=evidence_entities,
                 )
+
 
                 # 9. Compute Deterministic Risk Assessment & Asset Prioritization
                 from app.services.risk_service import RiskService
-                RiskService.compute_and_save_target_risk(db=db, target_id=target.id)
+                risk_assessment = RiskService.compute_and_save_target_risk(db=db, target_id=target.id)
 
                 # Determine overall assessment status
                 has_failures = any(s == "failed" for s in collector_result.sources_status.values())
@@ -153,15 +213,80 @@ class CollectionService:
 
                 if all_failed:
                     target.assessment_status = "failed"
+                    run_status = "failed"
                 elif has_failures:
                     target.assessment_status = "partial"
+                    run_status = "partial"
                 else:
                     target.assessment_status = "completed"
+                    run_status = "completed"
+
+                # 10. Build Point-in-Time Assessment Run Snapshots
+                asset_scores = {
+                    ars.asset_id: ars 
+                    for ars in db.query(AssetRiskScore).filter(AssetRiskScore.target_id == target.id).all()
+                }
+
+                for asset in cataloged_assets:
+                    ars = asset_scores.get(asset.id)
+                    snap_asset = AssessmentRunAsset(
+                        assessment_run_id=run_record.id,
+                        target_id=target.id,
+                        asset_id=asset.id,
+                        asset_type=asset.asset_type,
+                        value=asset.value,
+                        source=asset.source,
+                        priority_score=ars.priority_score if ars else None,
+                        priority_level=ars.priority_level if ars else None,
+                    )
+                    db.add(snap_asset)
+
+                asset_val_map = {a.id: a.value for a in cataloged_assets}
+
+                for tech in cataloged_technologies:
+                    snap_tech = AssessmentRunTechnology(
+                        assessment_run_id=run_record.id,
+                        target_id=target.id,
+                        asset_value=asset_val_map.get(tech.asset_id) or target.primary_domain,
+                        name=tech.name,
+                        category=tech.category,
+                        version=tech.version,
+                        detection_method=tech.detection_method,
+                        confidence=tech.confidence,
+                    )
+                    db.add(snap_tech)
+
+                for sig in created_signals:
+                    snap_sig = AssessmentRunExposureSignal(
+                        assessment_run_id=run_record.id,
+                        target_id=target.id,
+                        asset_value=asset_val_map.get(sig.asset_id) or target.primary_domain,
+                        signal_type=sig.signal_type,
+                        category=sig.category,
+                        title=sig.title,
+                        severity=sig.severity,
+                        confidence=sig.confidence,
+                    )
+                    db.add(snap_sig)
+
+                total_findings = db.query(func.count(Finding.id)).filter(Finding.target_id == target.id).scalar() or 0
+
+                # Finalize AssessmentRun state
+                run_record.status = run_status
+                run_record.completed_at = datetime.now(timezone.utc)
+                run_record.overall_score = risk_assessment.overall_score if risk_assessment else 0.0
+                run_record.risk_level = risk_assessment.risk_level if risk_assessment else "low"
+                run_record.factors_breakdown = risk_assessment.factors_breakdown if risk_assessment else {}
+                run_record.sources_status = collector_result.sources_status
+                run_record.total_assets = len(cataloged_assets)
+                run_record.total_technologies = len(cataloged_technologies)
+                run_record.total_exposure_signals = len(created_signals)
+                run_record.total_findings = total_findings
+                run_record.total_evidence_items = len(evidence_entities)
 
                 db.commit()
                 db.refresh(target)
-
-                total_findings = db.query(func.count(Finding.id)).filter(Finding.target_id == target.id).scalar() or 0
+                db.refresh(run_record)
 
                 return CollectionSummaryResponse(
                     target_id=target.id,
@@ -180,6 +305,10 @@ class CollectionService:
             except Exception as exc:
                 db.rollback()
                 target.assessment_status = "failed"
+                if 'run_record' in locals() and run_record:
+                    run_record.status = "failed"
+                    run_record.completed_at = datetime.now(timezone.utc)
+                    run_record.error_message = str(exc)
                 db.commit()
                 logger.error(f"Error during collection pipeline for target {target_id}: {exc}")
                 raise HTTPException(

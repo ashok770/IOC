@@ -28,7 +28,10 @@ import {
   PriorityInvestigation,
   RelationshipSnapshot,
   RecentActivity,
-  MethodologySummary
+  MethodologySummary,
+  EmailSecurityCard,
+  CertificateIntelligenceCard,
+  ExternalDependenciesCard
 } from '../components/overview';
 
 export const OverviewPage: React.FC = () => {
@@ -180,6 +183,24 @@ export const OverviewPage: React.FC = () => {
             <div className="column-side">
               <ExposureDriversChart risk={risk} />
             </div>
+          </div>
+
+          <div style={{ marginTop: '24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
+            <EmailSecurityCard
+              targetId={selectedTarget.id}
+              exposureSignals={exposureSignals}
+              technologies={technologies}
+              relationships={relationships}
+            />
+            <CertificateIntelligenceCard
+              targetId={selectedTarget.id}
+              exposureSignals={exposureSignals}
+              relationships={relationships}
+            />
+            <ExternalDependenciesCard
+              targetId={selectedTarget.id}
+              relationships={relationships}
+            />
           </div>
 
           <div className="overview-section-group">

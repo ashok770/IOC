@@ -8,3 +8,7 @@ export * from './RiskPage';
 export * from './RiskAssessmentPage';
 export * from './ReportsPage';
 export * from './SettingsPage';
+export * from './AssetInvestigationPage';
+export * from './AssessmentHistoryPage';
+export * from './DesignSystemPage';
+export * from './MarketingHomePage';

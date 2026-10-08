@@ -7,3 +7,4 @@ export * from './evidenceApi';
 export * from './relationshipApi';
 export * from './exposureApi';
 export * from './riskApi';
+export * from './historyApi';

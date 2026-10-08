@@ -64,13 +64,14 @@ def get_current_user(
             detail="User not found or inactive",
         )
 
+    from urllib.parse import urlparse
     from app.config import get_settings
     settings = get_settings()
 
     # CSRF Protection for state-changing requests
     if request.method in ("POST", "PUT", "PATCH", "DELETE"):
-        origin = request.headers.get("origin") or request.headers.get("referer")
-        if not origin:
+        origin_hdr = request.headers.get("origin") or request.headers.get("referer")
+        if not origin_hdr:
             AuditService.log(
                 db=db,
                 action=AuditAction.CSRF_BLOCKED,
@@ -84,26 +85,47 @@ def get_current_user(
                 detail="CSRF validation failed: Missing Origin/Referer header",
             )
         
-        # Strip trailing slash and path from referer if present
-        if origin.endswith("/"):
-            origin = origin[:-1]
-            
-        allowed_origins = [o.rstrip("/") for o in settings.cors_origins]
-        
-        # Check if the origin starts with any allowed origin (to handle referer paths)
-        if not any(origin.startswith(allowed) for allowed in allowed_origins):
+        try:
+            parsed_origin = urlparse(origin_hdr)
+            origin_base = f"{parsed_origin.scheme}://{parsed_origin.netloc}".lower() if (parsed_origin.scheme and parsed_origin.netloc) else None
+        except Exception:
+            origin_base = None
+
+        if not origin_base:
             AuditService.log(
                 db=db,
                 action=AuditAction.CSRF_BLOCKED,
                 result=AuditResult.BLOCKED,
                 user_id=user.id if user else None,
                 request=request,
-                metadata={"reason": "Untrusted Origin/Referer", "origin": origin}
+                metadata={"reason": "Invalid Origin/Referer header format", "raw_origin": origin_hdr}
             )
-            # In a real environment, we might want to strictly parse URL components
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"CSRF validation failed: Untrusted Origin/Referer '{origin}'",
+                detail="CSRF validation failed: Invalid Origin/Referer header format",
+            )
+
+        allowed_bases = set()
+        for allowed in settings.cors_origins:
+            try:
+                p = urlparse(allowed)
+                if p.scheme and p.netloc:
+                    allowed_bases.add(f"{p.scheme}://{p.netloc}".lower())
+            except Exception:
+                pass
+
+        if origin_base not in allowed_bases:
+            AuditService.log(
+                db=db,
+                action=AuditAction.CSRF_BLOCKED,
+                result=AuditResult.BLOCKED,
+                user_id=user.id if user else None,
+                request=request,
+                metadata={"reason": "Untrusted Origin/Referer", "origin": origin_base}
+            )
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"CSRF validation failed: Untrusted Origin/Referer '{origin_hdr}'",
             )
 
     return user

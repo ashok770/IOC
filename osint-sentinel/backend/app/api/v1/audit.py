@@ -27,6 +27,16 @@ def list_audit_logs(
     Retrieve security audit logs. 
     Users can only view logs corresponding to their own user_id or targets they own.
     """
+    if target_id:
+        from app.models.target import Target
+        from fastapi import HTTPException, status
+        target = db.query(Target).filter(Target.id == target_id, Target.owner_id == current_user.id).first()
+        if not target:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Target with ID '{target_id}' not found.",
+            )
+
     items, total = AuditService.list_logs_for_user(
         db=db,
         user_id=current_user.id,

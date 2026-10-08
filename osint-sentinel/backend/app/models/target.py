@@ -74,6 +74,12 @@ class Target(Base):
         cascade="all, delete-orphan",
         order_by="AssetRiskScore.priority_score.desc()",
     )
+    assessment_runs = relationship(
+        "AssessmentRun",
+        back_populates="target",
+        cascade="all, delete-orphan",
+        order_by="AssessmentRun.started_at.desc()",
+    )
 
     def __repr__(self) -> str:
         return f"<Target(id={self.id}, domain={self.primary_domain}, status={self.assessment_status})>"

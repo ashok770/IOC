@@ -438,3 +438,137 @@ def list_target_asset_priorities(
         offset=skip,
     )
 
+
+# Assessment History & Change Intelligence Endpoints
+from app.models.assessment_run import AssessmentRun
+from app.schemas.assessment_run import (
+    AssessmentRunResponse,
+    AssessmentRunListResponse,
+    AssessmentRunDetailResponse,
+    AssessmentComparisonResponse,
+)
+from app.services.comparison_service import AssessmentComparisonService
+
+
+@router.get(
+    "/{target_id}/assessments",
+    response_model=AssessmentRunListResponse,
+    summary="List Historical Assessment Runs for Target",
+)
+def list_target_assessments(
+    skip: int = Query(0, ge=0, description="Offset"),
+    limit: int = Query(50, ge=1, le=200, description="Page limit"),
+    target: Target = Depends(get_authorized_target),
+    db: Session = Depends(get_db),
+) -> AssessmentRunListResponse:
+    """Retrieve historical assessment runs for an authorized target (newest first)."""
+    query = db.query(AssessmentRun).filter(AssessmentRun.target_id == target.id)
+    total = query.count()
+    items = query.order_by(AssessmentRun.started_at.desc()).offset(skip).limit(limit).all()
+    return AssessmentRunListResponse(
+        items=[AssessmentRunResponse.model_validate(run) for run in items],
+        total=total,
+        limit=limit,
+        offset=skip,
+    )
+
+
+@router.get(
+    "/{target_id}/assessments/compare",
+    response_model=AssessmentComparisonResponse,
+    summary="Compare Two Historical Assessment Runs",
+)
+def compare_target_assessments(
+    base_run_id: str = Query(..., description="Base assessment run ID"),
+    target_run_id: str = Query(..., description="Target assessment run ID"),
+    target: Target = Depends(get_authorized_target),
+    db: Session = Depends(get_db),
+) -> AssessmentComparisonResponse:
+    """Deterministic comparison between two historical assessment runs for an authorized target."""
+    if base_run_id == target_run_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="base_run_id and target_run_id must be different assessment runs.",
+        )
+
+    base_run = (
+        db.query(AssessmentRun)
+        .filter(AssessmentRun.id == base_run_id, AssessmentRun.target_id == target.id)
+        .first()
+    )
+    target_run = (
+        db.query(AssessmentRun)
+        .filter(AssessmentRun.id == target_run_id, AssessmentRun.target_id == target.id)
+        .first()
+    )
+
+    if not base_run or not target_run:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="One or both assessment runs not found for this target.",
+        )
+
+    return AssessmentComparisonService.compare_runs(
+        db=db,
+        base_run=base_run,
+        target_run=target_run,
+    )
+
+
+@router.get(
+    "/{target_id}/assessments/{assessment_id}",
+    response_model=AssessmentRunDetailResponse,
+    summary="Get Specific Historical Assessment Run Detail",
+)
+def get_target_assessment_detail(
+    assessment_id: str,
+    target: Target = Depends(get_authorized_target),
+    db: Session = Depends(get_db),
+) -> AssessmentRunDetailResponse:
+    """Retrieve metadata and snapshots of a specific historical assessment run."""
+    run = (
+        db.query(AssessmentRun)
+        .filter(AssessmentRun.id == assessment_id, AssessmentRun.target_id == target.id)
+        .first()
+    )
+    if not run:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Assessment run '{assessment_id}' not found for target '{target.id}'.",
+        )
+    return AssessmentRunDetailResponse.model_validate(run)
+
+
+@router.get(
+    "/{target_id}/dependencies",
+    summary="List External Infrastructure Dependencies for Target",
+)
+def list_target_dependencies(
+    target: Target = Depends(get_authorized_target),
+    db: Session = Depends(get_db),
+):
+    """
+    Retrieve unified external infrastructure dependencies for an authorized target.
+    Analyzes CNAME, NS, MX, SPF includes, CT external references, and CDN/Cloud technologies.
+    """
+    from app.models.evidence import EvidenceItem
+    from app.models.relationship import Relationship
+    from app.models.technology import Technology
+    from analyzers.external_dependency_analyzer import ExternalDependencyAnalyzer
+
+    evidence_items = db.query(EvidenceItem).filter(EvidenceItem.target_id == target.id).all()
+    relationships = db.query(Relationship).filter(Relationship.target_id == target.id).all()
+    technologies = db.query(Technology).filter(Technology.target_id == target.id).all()
+
+    analyzer = ExternalDependencyAnalyzer()
+    res = analyzer.analyze(
+        target_domain=target.primary_domain,
+        target_id=target.id,
+        evidence=evidence_items,
+        relationships=relationships,
+        technologies=technologies,
+    )
+    return res.model_dump()
+
+
+
