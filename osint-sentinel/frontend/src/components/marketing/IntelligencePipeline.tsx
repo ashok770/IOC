@@ -7,14 +7,14 @@ export const IntelligencePipeline: React.FC = () => {
       name: 'DISCOVER',
       tagline: 'Public Ingestion',
       description:
-        'Continuously gather publicly observable DNS records, TLS certificates, IP allocations, and HTTP headers without invasive probing.',
+        'Gather publicly observable DNS records, TLS certificates, RDAP registration records, and HTTP web-root headers without invasive probing.',
     },
     {
       num: '02',
       name: 'CORRELATE',
       tagline: 'Deterministic Graph',
       description:
-        'Link hostnames, IP addresses, autonomous systems, and wildcard certificates into an interconnected entity graph model.',
+        'Link hostnames, IP addresses, DNS records, and certificate SAN entries into an interconnected entity relationship model.',
     },
     {
       num: '03',
@@ -28,14 +28,14 @@ export const IntelligencePipeline: React.FC = () => {
       name: 'PRIORITIZE',
       tagline: 'Exposure Identification',
       description:
-        'Surface configuration drift, sensitive endpoint exposures, and anomalous relationships based on factual security signals.',
+        'Surface configuration drift, sensitive hostnames, expiring certificates or domains, and email security gaps based on factual exposure signals.',
     },
     {
       num: '05',
       name: 'INVESTIGATE',
       tagline: 'Provenance Auditing',
       description:
-        'Inspect individual findings down to raw collector timestamps, cryptographic hash records, and authoritative sources.',
+        'Inspect individual findings down to raw collector timestamps, source records, and authoritative collector output.',
     },
     {
       num: '06',

@@ -15,7 +15,7 @@ export const ExternalViewSection: React.FC = () => {
     {
       type: 'Domain',
       countLabel: 'Apex Roots',
-      description: 'Registered organizational root domains, DNS zones, and whois/RDAP registry entities.',
+      description: 'Registered organizational root domains, DNS zones, and authoritative RDAP registry entities.',
       example: 'company-core.org',
       icon: (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -27,7 +27,7 @@ export const ExternalViewSection: React.FC = () => {
     {
       type: 'Host',
       countLabel: 'Subdomains & FQDNs',
-      description: 'Public hostnames discovered via DNS brute enumeration, CT records, and reverse lookups.',
+      description: 'Public hostnames discovered via authoritative DNS queries, CT records, and HTTP responses.',
       example: 'auth-gateway.company-core.org',
       icon: (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -41,8 +41,8 @@ export const ExternalViewSection: React.FC = () => {
     {
       type: 'IP',
       countLabel: 'IPv4 / IPv6 Addresses',
-      description: 'Network-layer routing endpoints correlated to autonomous systems and cloud providers.',
-      example: '198.51.100.24 (AS13335)',
+      description: 'Network-layer IP addresses resolved directly from authoritative DNS A and AAAA records.',
+      example: '198.51.100.24',
       icon: (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
@@ -52,7 +52,7 @@ export const ExternalViewSection: React.FC = () => {
     {
       type: 'Certificate',
       countLabel: 'TLS Records',
-      description: 'Cryptographic identity certificates, Subject Alternative Names (SANs), and CA hierarchies.',
+      description: 'Public Certificate Transparency records, Subject Alternative Names (SANs), issuers, and validity windows.',
       example: 'CN=*.company-core.org (Valid)',
       icon: (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -63,8 +63,8 @@ export const ExternalViewSection: React.FC = () => {
     {
       type: 'Technology',
       countLabel: 'Observed Stacks',
-      description: 'Web servers, application runtimes, CDN edges, and security response headers.',
-      example: 'Envoy Proxy / React 18.2 / Next.js',
+      description: 'Web servers, application frameworks, proxies, and meta generators detected from HTTP responses.',
+      example: 'Nginx 1.24 / Next.js / Express',
       icon: (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <polyline points="16 18 22 12 16 6" />
@@ -75,7 +75,7 @@ export const ExternalViewSection: React.FC = () => {
     {
       type: 'Evidence',
       countLabel: 'Raw Artifacts',
-      description: 'Immutable collector output, raw response payloads, DNS answers, and verification hashes.',
+      description: 'Authoritative collector records, raw DNS answers, HTTP header responses, and collector timestamps.',
       example: 'EVID-DNS-2026-9042',
       icon: (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -87,8 +87,8 @@ export const ExternalViewSection: React.FC = () => {
     {
       type: 'Dependency',
       countLabel: 'SaaS & Integrations',
-      description: 'Third-party integrations, embedded scripts, cloud analytics, and external identity endpoints.',
-      example: 'Okta Identity / Datadog RUM',
+      description: 'External CNAME targets, delegated nameservers, mail exchange hosts, and SPF include references.',
+      example: 'Google Workspace MX / Cloudflare CDN',
       icon: (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <circle cx="18" cy="5" r="3" />
@@ -102,8 +102,8 @@ export const ExternalViewSection: React.FC = () => {
     {
       type: 'Exposure Signal',
       countLabel: 'Surface Conditions',
-      description: 'Observable anomalies, exposed staging environments, and misconfigured public headers.',
-      example: 'Exposed Swagger UI / Staging Host',
+      description: 'Factual exposure conditions: remote access indicators, test subdomains, missing SPF/DMARC, or expiring certs.',
+      example: 'Missing DMARC / Dev Subdomain',
       icon: (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
@@ -280,7 +280,7 @@ export const ExternalViewSection: React.FC = () => {
                 color: '#9CA3AF',
               }}
             >
-              <span>Provenance Verification: <strong style={{ color: '#34D399' }}>Cryptographic Hash</strong></span>
+              <span>Evidence Provenance: <strong style={{ color: '#34D399' }}>Source + Timestamp</strong></span>
               <span>Deterministic Context</span>
             </div>
           </div>

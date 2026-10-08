@@ -7,33 +7,124 @@ import { ConnectionState } from '../graph/GraphPrimitives';
 export const HeroSection: React.FC = () => {
   const [activeNode, setActiveNode] = useState<string>('node-domain');
 
-  // Hero Relationship Entity Graph data (Distinctive intelligence relationship composition)
+  // Streamlined 5-6 Node Hierarchy for maximum clarity:
+  // Root Domain -> Host + IP -> Technology + Signal -> Evidence
   const nodes: Array<{
     id: string;
     type: NodeType;
     label: string;
     sublabel: string;
+    size: 'lg' | 'md' | 'sm' | 'xs';
     x: number;
     y: number;
   }> = [
-    { id: 'node-domain', type: 'Domain', label: 'target-organization.com', sublabel: 'Apex Domain', x: 200, y: 30 },
-    { id: 'node-host', type: 'Host', label: 'api.target-organization.com', sublabel: 'Edge Gateway Host', x: 30, y: 130 },
-    { id: 'node-ip', type: 'IP', label: '198.51.100.42', sublabel: 'Public Anycast IPv4', x: 370, y: 130 },
-    { id: 'node-cert', type: 'Certificate', label: 'TLS Wildcard Certificate', sublabel: 'Let\'s Encrypt SAN', x: 30, y: 240 },
-    { id: 'node-tech', type: 'Technology', label: 'Nginx 1.24 / HTTP/2', sublabel: 'Web Server Header', x: 200, y: 240 },
-    { id: 'node-signal', type: 'Signal', label: 'Public Exposure Signal', sublabel: 'Exposed Management UI', x: 370, y: 240 },
-    { id: 'node-evidence', type: 'Evidence', label: 'DNS A Record Prov.', sublabel: 'Query ID #84920', x: 110, y: 340 },
-    { id: 'node-dep', type: 'Dependency', label: 'Auth0 Identity Provider', sublabel: 'External SaaS Dependency', x: 290, y: 340 },
+    {
+      id: 'node-domain',
+      type: 'Domain',
+      label: 'example.org',
+      sublabel: 'Apex Domain',
+      size: 'lg',
+      x: 180,
+      y: 18,
+    },
+    {
+      id: 'node-host',
+      type: 'Host',
+      label: 'api.example.org',
+      sublabel: 'Observed Host',
+      size: 'md',
+      x: 38,
+      y: 114,
+    },
+    {
+      id: 'node-ip',
+      type: 'IP',
+      label: '203.0.113.24',
+      sublabel: 'Public Address',
+      size: 'md',
+      x: 338,
+      y: 114,
+    },
+    {
+      id: 'node-tech',
+      type: 'Technology',
+      label: 'nginx',
+      sublabel: 'HTTP Header',
+      size: 'sm',
+      x: 48,
+      y: 212,
+    },
+    {
+      id: 'node-signal',
+      type: 'Signal',
+      label: 'Development Host',
+      sublabel: 'Exposure Signal',
+      size: 'xs',
+      x: 338,
+      y: 214,
+    },
+    {
+      id: 'node-evidence',
+      type: 'Evidence',
+      label: 'Server Header',
+      sublabel: 'Observed Evidence',
+      size: 'sm',
+      x: 178,
+      y: 294,
+    },
   ];
 
   const relationships = [
-    { from: 'node-domain', to: 'node-host', label: 'DNS CNAME', variant: 'cobalt' as const },
-    { from: 'node-domain', to: 'node-ip', label: 'A RECORD', variant: 'cobalt' as const },
-    { from: 'node-host', to: 'node-cert', label: 'TLS SNI', variant: 'indigo' as const },
-    { from: 'node-host', to: 'node-tech', label: 'HTTP HEADER', variant: 'muted' as const },
-    { from: 'node-ip', to: 'node-signal', label: 'PROVENANCE', variant: 'cobalt' as const },
-    { from: 'node-cert', to: 'node-evidence', label: 'CT LOG', variant: 'muted' as const },
-    { from: 'node-tech', to: 'node-dep', label: 'INTEGRATION', variant: 'indigo' as const },
+    {
+      from: 'node-domain',
+      to: 'node-host',
+      x1: 228,
+      y1: 62,
+      x2: 142,
+      y2: 114,
+      label: 'DNS',
+      variant: 'cobalt' as const,
+    },
+    {
+      from: 'node-domain',
+      to: 'node-ip',
+      x1: 292,
+      y1: 62,
+      x2: 378,
+      y2: 114,
+      label: 'A RECORD',
+      variant: 'cobalt' as const,
+    },
+    {
+      from: 'node-host',
+      to: 'node-tech',
+      x1: 112,
+      y1: 154,
+      x2: 112,
+      y2: 212,
+      label: 'HTTP HEADER',
+      variant: 'muted' as const,
+    },
+    {
+      from: 'node-ip',
+      to: 'node-signal',
+      x1: 408,
+      y1: 154,
+      x2: 408,
+      y2: 214,
+      label: 'DERIVED SIGNAL',
+      variant: 'cobalt' as const,
+    },
+    {
+      from: 'node-tech',
+      to: 'node-evidence',
+      x1: 145,
+      y1: 248,
+      x2: 215,
+      y2: 294,
+      label: 'OBSERVATION',
+      variant: 'muted' as const,
+    },
   ];
 
   return (
@@ -67,7 +158,7 @@ export const HeroSection: React.FC = () => {
           <div className="hero-actions">
             <Link
               to="/overview"
-              className="final-cta-button"
+              className="hero-primary-cta"
               id="hero-primary-cta"
             >
               <span>START AN ASSESSMENT</span>
@@ -76,36 +167,23 @@ export const HeroSection: React.FC = () => {
 
             <a
               href="#product"
-              className="marketing-nav-cta"
-              style={{
-                backgroundColor: 'transparent',
-                color: 'var(--ds-color-graphite, #111827)',
-                border: '1px solid var(--ds-color-border-neutral, #E5E7EB)',
-              }}
+              className="hero-secondary-cta"
               id="hero-secondary-cta"
             >
               EXPLORE THE PLATFORM
             </a>
           </div>
 
-          <div
-            style={{
-              marginTop: '36px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '24px',
-              fontSize: '0.8125rem',
-              color: 'var(--ds-color-text-muted, #6B7280)',
-              fontFamily: 'var(--ds-font-mono, monospace)',
-            }}
-          >
-            <span>• PASSIVE-FIRST</span>
-            <span>• FACTUAL PROVENANCE</span>
-            <span>• DETERMINISTIC CONTEXT</span>
+          <div className="hero-principles-row">
+            <span>PASSIVE-FIRST</span>
+            <span className="hero-principle-dot" aria-hidden="true">•</span>
+            <span>FACTUAL PROVENANCE</span>
+            <span className="hero-principle-dot" aria-hidden="true">•</span>
+            <span>DETERMINISTIC CONTEXT</span>
           </div>
         </div>
 
-        {/* Right Column: Distinctive Intelligence Relationship Composition */}
+        {/* Right Column: Refined Intelligence Relationship Graph */}
         <div className="hero-visual-card">
           <div className="hero-visual-header">
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -114,76 +192,45 @@ export const HeroSection: React.FC = () => {
             <ConnectionState state="active" label="ENTITY RELATIONSHIP GRAPH" />
           </div>
 
-          {/* SVG Map Canvas */}
-          <div
-            style={{
-              width: '100%',
-              height: '430px',
-              backgroundColor: '#111318',
-              borderRadius: '10px',
-              position: 'relative',
-              overflow: 'hidden',
-              boxShadow: 'inset 0 0 20px rgba(0, 0, 0, 0.5)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-            }}
-          >
+          {/* Responsive Graph Canvas */}
+          <div className="hero-graph-surface">
             {/* Vector Connector Lines */}
             <svg
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '100%',
-                pointerEvents: 'none',
-              }}
-              viewBox="0 0 540 430"
+              className="hero-graph-svg"
+              viewBox="0 0 520 360"
               preserveAspectRatio="xMidYMid meet"
             >
-              {relationships.map((rel, idx) => {
-                const n1 = nodes.find((n) => n.id === rel.from);
-                const n2 = nodes.find((n) => n.id === rel.to);
-                if (!n1 || !n2) return null;
-                return (
-                  <RelationshipLine
-                    key={idx}
-                    x1={n1.x + 65}
-                    y1={n1.y + 20}
-                    x2={n2.x + 65}
-                    y2={n2.y + 20}
-                    colorVariant={rel.variant}
-                    label={rel.label}
-                    animated={false}
-                  />
-                );
-              })}
+              {relationships.map((rel, idx) => (
+                <RelationshipLine
+                  key={idx}
+                  x1={rel.x1}
+                  y1={rel.y1}
+                  x2={rel.x2}
+                  y2={rel.y2}
+                  colorVariant={rel.variant}
+                  label={rel.label}
+                  animated={false}
+                />
+              ))}
             </svg>
 
-            {/* Entity Nodes */}
-            <div
-              style={{
-                position: 'relative',
-                width: '540px',
-                height: '430px',
-                transformOrigin: 'top left',
-              }}
-            >
+            {/* Entity Nodes Layer */}
+            <div className="hero-graph-nodes-layer">
               {nodes.map((node) => (
                 <div
                   key={node.id}
+                  className="hero-graph-node-wrapper"
                   style={{
-                    position: 'absolute',
-                    left: `${node.x}px`,
-                    top: `${node.y}px`,
+                    left: `${(node.x / 520) * 100}%`,
+                    top: `${(node.y / 360) * 100}%`,
                     zIndex: 5,
-                    transform: 'scale(0.88)',
-                    transformOrigin: 'top left',
                   }}
                 >
                   <IntelligenceNode
                     type={node.type}
                     label={node.label}
                     sublabel={node.sublabel}
+                    size={node.size}
                     active={activeNode === node.id}
                     onClick={() => setActiveNode(node.id)}
                   />
@@ -192,18 +239,9 @@ export const HeroSection: React.FC = () => {
             </div>
           </div>
 
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginTop: '16px',
-              fontSize: '0.75rem',
-              color: 'var(--ds-color-text-muted, #6B7280)',
-            }}
-          >
-            <span>8 Connected Entity Types</span>
-            <span style={{ fontFamily: 'var(--ds-font-mono)' }}>Deterministic Correlation Engine</span>
+          <div className="hero-visual-footer">
+            <span>5 Connected Entity Types</span>
+            <span className="hero-footer-engine">Evidence-Based Correlation</span>
           </div>
         </div>
       </div>

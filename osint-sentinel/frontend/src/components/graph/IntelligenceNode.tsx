@@ -17,6 +17,7 @@ export interface IntelligenceNodeProps {
   sublabel?: string;
   active?: boolean;
   highlighted?: boolean;
+  size?: 'lg' | 'md' | 'sm' | 'xs';
   onClick?: () => void;
   className?: string;
   style?: React.CSSProperties;
@@ -96,24 +97,38 @@ export const IntelligenceNode: React.FC<IntelligenceNodeProps> = ({
   sublabel,
   active = false,
   highlighted = false,
+  size = 'md',
   onClick,
   className = '',
   style,
   id,
 }) => {
   const activeClass = active ? 'ds-graph-node-active' : highlighted ? 'ds-graph-node-highlighted' : '';
+  const sizeClass = `ds-graph-node-${size}`;
   return (
     <div
       id={id}
       style={style}
       onClick={onClick}
-      className={`ds-graph-node ${activeClass} ${className}`.trim()}
+      className={`ds-graph-node ${sizeClass} ${activeClass} ${className}`.trim()}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={
+        onClick
+          ? (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onClick();
+              }
+            }
+          : undefined
+      }
     >
       <span className="ds-node-icon">{getNodeIcon(type)}</span>
-      <div style={{ display: 'flex', flexDirection: 'column' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         <span className="ds-node-type-label">{type}</span>
-        <span style={{ fontWeight: 600 }}>{label}</span>
-        {sublabel && <span style={{ fontSize: '0.6875rem', opacity: 0.65 }}>{sublabel}</span>}
+        <span className="ds-node-label">{label}</span>
+        {sublabel && <span className="ds-node-sublabel">{sublabel}</span>}
       </div>
     </div>
   );

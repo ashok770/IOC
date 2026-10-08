@@ -21,15 +21,6 @@ export const MarketingFooter: React.FC = () => {
               Evidence-driven external security intelligence platform designed exclusively
               for authorized assessments of public-facing infrastructure.
             </p>
-            <div
-              style={{
-                fontSize: '0.75rem',
-                color: 'var(--ds-color-text-muted, #6B7280)',
-                fontFamily: 'var(--ds-font-mono, monospace)',
-              }}
-            >
-              RELEASE: PHASE 14.2 SAAS COMMERCIAL
-            </div>
           </div>
 
           {/* Product Col */}
@@ -107,9 +98,13 @@ export const MarketingFooter: React.FC = () => {
                 </button>
               </li>
               <li>
-                <Link to="/design-system" className="footer-link">
-                  Design System Specs
-                </Link>
+                <button
+                  type="button"
+                  onClick={() => scrollToSection('security')}
+                  className="marketing-nav-link"
+                >
+                  Auditable Governance
+                </button>
               </li>
             </ul>
           </div>

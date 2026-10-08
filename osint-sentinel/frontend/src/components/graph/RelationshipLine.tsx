@@ -28,20 +28,21 @@ export const RelationshipLine: React.FC<RelationshipLineProps> = ({
     switch (colorVariant) {
       case 'cobalt':
       case 'cyan':
-        return '#2563EB';
+        return '#3B82F6';
       case 'indigo':
       case 'violet':
-        return '#4F46E5';
+        return '#6366F1';
       case 'muted':
       case 'subtle':
-        return '#9CA3AF';
+        return 'rgba(156, 163, 175, 0.45)';
       default:
-        return '#2563EB';
+        return '#3B82F6';
     }
   };
 
   const midX = (x1 + x2) / 2;
   const midY = (y1 + y2) / 2;
+  const labelWidth = label ? Math.max(label.length * 6.2 + 14, 38) : 0;
 
   return (
     <g id={id} className="ds-relationship-line">
@@ -61,23 +62,24 @@ export const RelationshipLine: React.FC<RelationshipLineProps> = ({
       {label && (
         <g transform={`translate(${midX}, ${midY})`}>
           <rect
-            x="-34"
-            y="-9"
-            width="68"
-            height="18"
-            rx="4"
-            fill="#111318"
+            x={-labelWidth / 2}
+            y="-8"
+            width={labelWidth}
+            height="16"
+            rx="3"
+            fill="#0F1117"
             stroke="rgba(255, 255, 255, 0.12)"
             strokeWidth="1"
           />
           <text
             x="0"
-            y="3"
+            y="3.5"
             textAnchor="middle"
             fill="#9CA3AF"
-            fontSize="9"
-            fontFamily="var(--ds-font-mono)"
+            fontSize="8.5"
+            fontFamily="var(--ds-font-mono, monospace)"
             fontWeight="500"
+            letterSpacing="0.04em"
           >
             {label}
           </text>

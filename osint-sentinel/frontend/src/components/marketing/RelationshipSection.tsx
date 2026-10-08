@@ -143,22 +143,23 @@ export const RelationshipSection: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <div>
                 <h4 style={{ fontSize: '1.0625rem', fontWeight: 700, color: '#FFFFFF', margin: '0 0 8px 0' }}>
-                  Cryptographic & Network Determinism
+                  Evidence-Based Correlation
                 </h4>
                 <p style={{ fontSize: '0.875rem', lineHeight: 1.6, color: '#9CA3AF', margin: 0 }}>
                   Nodes in the correlation graph are not linked by speculation. Links represent
-                  concrete cryptographic SAN inclusions, authoritative DNS CNAME / A pointers,
-                  and verified HTTP reverse-proxy headers.
+                  concrete certificate SAN inclusions, authoritative DNS CNAME / A pointers,
+                  and observed HTTP response headers.
                 </p>
               </div>
 
               <div>
                 <h4 style={{ fontSize: '1.0625rem', fontWeight: 700, color: '#FFFFFF', margin: '0 0 8px 0' }}>
-                  No Synthetic Attack Paths
+                  No Unverified Inference
                 </h4>
                 <p style={{ fontSize: '0.875rem', lineHeight: 1.6, color: '#9CA3AF', margin: 0 }}>
-                  We do not simulate fictitious attack paths or manufacture arbitrary CVE exploit
-                  sequences. We provide real, defensible structural visibility into your public footprint.
+                  OSINT Sentinel distinguishes observed evidence from analytical exposure signals.
+                  We avoid speculative exploit chains, unverified vulnerability claims, or
+                  artificial attack probability calculations.
                 </p>
               </div>
             </div>

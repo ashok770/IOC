@@ -1,6 +1,6 @@
 /* ==============================================================================
    OSINT Sentinel — Editorial Intelligence Marketing Website Styles
-   Phase 14.2 Commercial SaaS Public Presentation
+   Authorized External Security Exposure Assessment Platform
    ============================================================================== */
 
 /* Marketing Page Root Container */
@@ -112,11 +112,11 @@
   top: 0;
   z-index: 1000;
   width: 100%;
-  background-color: rgba(247, 247, 244, 0.92);
+  background-color: rgba(247, 247, 244, 0.96);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--ds-color-border-neutral, #E5E7EB);
-  transition: background-color 200ms ease, border-color 200ms ease;
+  transition: background-color 150ms ease, border-color 150ms ease;
 }
 
 .marketing-nav-inner {
@@ -126,10 +126,23 @@
   height: 72px;
 }
 
+.marketing-nav-brand {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+}
+
+.marketing-nav-brand:focus-visible {
+  outline: 2px solid var(--ds-color-cobalt, #2563EB);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
 .marketing-nav-links {
   display: flex;
   align-items: center;
-  gap: 36px;
+  gap: 32px;
   list-style: none;
   margin: 0;
   padding: 0;
@@ -139,17 +152,30 @@
   font-size: 0.875rem;
   font-weight: 600;
   letter-spacing: -0.01em;
-  color: var(--ds-color-graphite-muted, #374151);
+  color: var(--ds-color-graphite, #111827);
   text-decoration: none;
   transition: color 150ms ease;
   cursor: pointer;
   background: none;
   border: none;
-  padding: 6px 0;
+  padding: 8px 4px;
+  position: relative;
 }
 
 .marketing-nav-link:hover {
   color: var(--ds-color-cobalt, #2563EB);
+}
+
+.marketing-nav-link:focus-visible {
+  outline: 2px solid var(--ds-color-cobalt, #2563EB);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.marketing-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
 .marketing-nav-cta {
@@ -160,16 +186,32 @@
   color: #FFFFFF !important;
   font-size: 0.8125rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  padding: 10px 18px;
-  border-radius: var(--ds-radius-sm, 8px);
+  letter-spacing: 0.05em;
+  padding: 9px 18px;
+  border-radius: 6px;
   text-decoration: none;
-  transition: background-color 150ms ease, transform 150ms ease;
+  border: 1px solid transparent;
+  transition: background-color 150ms ease, transform 150ms ease, box-shadow 150ms ease;
 }
 
 .marketing-nav-cta:hover {
-  background-color: var(--ds-color-cobalt, #2563EB);
+  background-color: #1F2937;
   transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(17, 24, 39, 0.15);
+}
+
+.marketing-nav-cta:focus-visible {
+  outline: 2px solid var(--ds-color-cobalt, #2563EB);
+  outline-offset: 2px;
+}
+
+.marketing-nav-cta-arrow {
+  display: inline-block;
+  transition: transform 150ms ease;
+}
+
+.marketing-nav-cta:hover .marketing-nav-cta-arrow {
+  transform: translateX(2px);
 }
 
 /* Mobile Menu Toggle */
@@ -181,6 +223,17 @@
   border-radius: 6px;
   cursor: pointer;
   color: var(--ds-color-graphite, #111827);
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.marketing-mobile-toggle:hover {
+  background-color: #F3F4F6;
+  border-color: #D1D5DB;
+}
+
+.marketing-mobile-toggle:focus-visible {
+  outline: 2px solid var(--ds-color-cobalt, #2563EB);
+  outline-offset: 2px;
 }
 
 .marketing-mobile-drawer {
@@ -193,7 +246,40 @@
 .marketing-mobile-drawer.is-open {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
+}
+
+.marketing-mobile-link {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--ds-color-graphite, #111827);
+  background: none;
+  border: none;
+  padding: 8px 0;
+  text-align: left;
+  cursor: pointer;
+  transition: color 150ms ease;
+}
+
+.marketing-mobile-link:hover {
+  color: var(--ds-color-cobalt, #2563EB);
+}
+
+.marketing-mobile-link:focus-visible {
+  outline: 2px solid var(--ds-color-cobalt, #2563EB);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.marketing-mobile-cta-wrap {
+  padding-top: 14px;
+  border-top: 1px solid #E5E7EB;
+}
+
+.marketing-mobile-cta {
+  display: inline-flex;
+  width: 100%;
+  justify-content: center;
 }
 
 /* ==============================================================================
@@ -238,6 +324,76 @@
   flex-wrap: wrap;
 }
 
+.hero-primary-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background-color: var(--ds-color-cobalt, #2563EB);
+  color: #FFFFFF !important;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 14px 28px;
+  border-radius: 8px;
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition: background-color 150ms ease, transform 150ms ease, box-shadow 150ms ease;
+}
+
+.hero-primary-cta:hover {
+  background-color: #1D4ED8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+}
+
+.hero-primary-cta:focus-visible {
+  outline: 2px solid var(--ds-color-cobalt, #2563EB);
+  outline-offset: 2px;
+}
+
+.hero-secondary-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #FFFFFF;
+  color: var(--ds-color-graphite, #111827) !important;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 14px 24px;
+  border-radius: 8px;
+  border: 1.5px solid #D1D5DB;
+  text-decoration: none;
+  transition: background-color 150ms ease, border-color 150ms ease, transform 150ms ease, color 150ms ease;
+}
+
+.hero-secondary-cta:hover {
+  background-color: #F3F4F6;
+  border-color: #9CA3AF;
+  color: #111827 !important;
+  transform: translateY(-1px);
+}
+
+.hero-secondary-cta:focus-visible {
+  outline: 2px solid var(--ds-color-cobalt, #2563EB);
+  outline-offset: 2px;
+}
+
+.hero-principles-row {
+  margin-top: 36px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 0.8125rem;
+  color: var(--ds-color-text-muted, #6B7280);
+  font-family: var(--ds-font-mono, monospace);
+  letter-spacing: 0.04em;
+}
+
+.hero-principle-dot {
+  opacity: 0.4;
+}
+
 .hero-visual-card {
   background-color: #FFFFFF;
   border: 1px solid var(--ds-color-border-neutral, #E5E7EB);
@@ -252,20 +408,61 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 18px;
-  margin-bottom: 20px;
+  padding-bottom: 16px;
+  margin-bottom: 18px;
   border-bottom: 1px solid #F3F4F6;
 }
 
 /* Hero Network Diagram */
-.hero-graph-canvas {
+.hero-graph-surface {
   width: 100%;
-  height: 380px;
-  position: relative;
-  background-color: #FAFAFA;
-  border: 1px dashed #E5E7EB;
+  aspect-ratio: 520 / 360;
+  min-height: 320px;
+  max-height: 400px;
+  background-color: #0F1117;
   border-radius: 10px;
+  position: relative;
   overflow: hidden;
+  box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.hero-graph-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.hero-graph-nodes-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: auto;
+}
+
+.hero-graph-node-wrapper {
+  position: absolute;
+  transform: translate(0, 0);
+  transition: transform 150ms ease;
+}
+
+.hero-visual-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  font-size: 0.75rem;
+  color: var(--ds-color-text-muted, #6B7280);
+}
+
+.hero-footer-engine {
+  font-family: var(--ds-font-mono, monospace);
+  color: #4B5563;
 }
 
 /* ==============================================================================
@@ -857,7 +1054,7 @@
     padding: 72px 0;
   }
   .marketing-nav-links,
-  .marketing-nav-cta {
+  .marketing-nav-actions .marketing-nav-cta {
     display: none;
   }
   .marketing-mobile-toggle {
@@ -865,6 +1062,17 @@
   }
   .hero-title {
     font-size: 2.25rem;
+  }
+  .hero-graph-surface {
+    min-height: 290px;
+  }
+  .hero-graph-node-wrapper {
+    transform: scale(0.88);
+    transform-origin: top left;
+  }
+  .hero-principles-row {
+    flex-wrap: wrap;
+    gap: 8px 12px;
   }
   .final-cta-headline {
     font-size: 2.125rem;
@@ -896,12 +1104,56 @@
   }
 }
 
+@media (max-width: 480px) {
+  .hero-title {
+    font-size: 1.875rem;
+  }
+  .hero-description {
+    font-size: 1rem;
+  }
+  .hero-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  .hero-primary-cta,
+  .hero-secondary-cta {
+    width: 100%;
+    justify-content: center;
+    box-sizing: border-box;
+    text-align: center;
+  }
+  .hero-visual-card {
+    padding: 18px 14px;
+  }
+  .hero-graph-surface {
+    min-height: 260px;
+  }
+  .hero-graph-node-wrapper {
+    transform: scale(0.76);
+    transform-origin: top left;
+  }
+  .hero-visual-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .hero-visual-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+}
+
 /* Reduced Motion Support */
 @media (prefers-reduced-motion: reduce) {
   .marketing-root {
     scroll-behavior: auto;
   }
   .marketing-nav-cta,
+  .marketing-nav-cta-arrow,
+  .hero-primary-cta,
+  .hero-secondary-cta,
+  .hero-graph-node-wrapper,
   .trace-item,
   .pipeline-step,
   .principle-card,

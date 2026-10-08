@@ -59,7 +59,7 @@ export const EvidenceSection: React.FC = () => {
                   margin: 0,
                 }}
               >
-                Immutable Observation Chains
+                Traceable Observation Chains
               </h3>
               <p
                 style={{
@@ -69,8 +69,8 @@ export const EvidenceSection: React.FC = () => {
                   margin: 0,
                 }}
               >
-                Unlike heuristic tools that guess risk scores or assume vulnerabilities,
-                OSINT Sentinel documents the raw protocol telemetry: collector source,
+                Unlike speculative tools that guess risk scores or assume vulnerabilities,
+                OSINT Sentinel documents factual protocol telemetry: collector source,
                 exact timestamp, authoritative responses, and correlation paths.
               </p>
             </div>
@@ -94,8 +94,8 @@ export const EvidenceSection: React.FC = () => {
                   margin: 0,
                 }}
               >
-                Confidence reflects the cryptographic integrity and direct observer confirmation
-                of the raw telemetry — not an arbitrary statistical attack probability.
+                Confidence reflects direct observer verification and collector authoritativeness —
+                not an arbitrary statistical attack probability or universal guarantee.
               </p>
             </div>
 
@@ -159,10 +159,10 @@ export const EvidenceSection: React.FC = () => {
             >
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <span style={{ fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#6B7280' }}>
-                  Telemetry Confidence
+                  Observation Confidence
                 </span>
-                <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#16A34A', fontFamily: 'var(--ds-font-mono, monospace)' }}>
-                  99%
+                <span style={{ fontSize: '1.125rem', fontWeight: 800, color: '#16A34A', fontFamily: 'var(--ds-font-mono, monospace)' }}>
+                  HIGH
                 </span>
               </div>
               <span

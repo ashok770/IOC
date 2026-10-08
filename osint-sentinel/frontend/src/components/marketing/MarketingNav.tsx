@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Logo } from '../brand/Logo';
 
@@ -13,19 +13,30 @@ export const MarketingNav: React.FC = () => {
     }
   };
 
+  // Close mobile menu on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && mobileMenuOpen) {
+        setMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [mobileMenuOpen]);
+
   return (
     <header className="marketing-nav" role="banner">
       <div className="marketing-container marketing-nav-inner">
         {/* Left: Brand Identity */}
         <Link
           to="/"
-          style={{ textDecoration: 'none', color: 'inherit' }}
-          aria-label="OSINT Sentinel Home"
+          className="marketing-nav-brand"
+          aria-label="OSINT Sentinel Home — External Security Intelligence"
         >
           <Logo variant="full" />
         </Link>
 
-        {/* Center: Primary Editorial Navigation */}
+        {/* Center / Right: Primary Editorial Navigation */}
         <nav
           className="marketing-nav-links"
           aria-label="Main Navigation"
@@ -54,24 +65,25 @@ export const MarketingNav: React.FC = () => {
           </button>
         </nav>
 
-        {/* Right: Platform Entrypoint Action */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {/* Far Right: Platform Entrypoint Action */}
+        <div className="marketing-nav-actions">
           <Link
             to="/overview"
             className="marketing-nav-cta"
             id="nav-platform-btn"
-            aria-label="Go to Platform Application"
+            aria-label="Enter Platform Application"
           >
             <span>PLATFORM</span>
-            <span aria-hidden="true">→</span>
+            <span className="marketing-nav-cta-arrow" aria-hidden="true">→</span>
           </Link>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile Menu Toggle */}
           <button
             className="marketing-mobile-toggle"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-expanded={mobileMenuOpen}
-            aria-label="Toggle Navigation Menu"
+            aria-controls="marketing-mobile-drawer"
+            aria-label={mobileMenuOpen ? 'Close Navigation Menu' : 'Open Navigation Menu'}
             type="button"
           >
             <svg
@@ -83,6 +95,7 @@ export const MarketingNav: React.FC = () => {
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
+              aria-hidden="true"
             >
               {mobileMenuOpen ? (
                 <path d="M18 6L6 18M6 6l12 12" />
@@ -96,39 +109,41 @@ export const MarketingNav: React.FC = () => {
 
       {/* Mobile Menu Drawer */}
       {mobileMenuOpen && (
-        <div className="marketing-mobile-drawer is-open">
+        <div
+          id="marketing-mobile-drawer"
+          className="marketing-mobile-drawer is-open"
+          role="region"
+          aria-label="Mobile Navigation Drawer"
+        >
           <button
             onClick={() => scrollToSection('product')}
-            className="marketing-nav-link"
-            style={{ textAlign: 'left' }}
+            className="marketing-mobile-link"
             type="button"
           >
             Product
           </button>
           <button
             onClick={() => scrollToSection('methodology')}
-            className="marketing-nav-link"
-            style={{ textAlign: 'left' }}
+            className="marketing-mobile-link"
             type="button"
           >
             Methodology
           </button>
           <button
             onClick={() => scrollToSection('security')}
-            className="marketing-nav-link"
-            style={{ textAlign: 'left' }}
+            className="marketing-mobile-link"
             type="button"
           >
             Security
           </button>
-          <div style={{ paddingTop: '12px', borderTop: '1px solid #E5E7EB' }}>
+          <div className="marketing-mobile-cta-wrap">
             <Link
               to="/overview"
-              className="marketing-nav-cta"
-              style={{ display: 'inline-flex', width: '100%', justifyContent: 'center' }}
+              className="marketing-nav-cta marketing-mobile-cta"
+              onClick={() => setMobileMenuOpen(false)}
             >
               <span>PLATFORM</span>
-              <span aria-hidden="true">→</span>
+              <span className="marketing-nav-cta-arrow" aria-hidden="true">→</span>
             </Link>
           </div>
         </div>

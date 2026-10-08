@@ -3,7 +3,7 @@ import React from 'react';
 export const AssessmentWorkflow: React.FC = () => {
   const steps = [
     { title: 'TARGET', sub: 'Input Apex / Scope', primary: true },
-    { title: 'PUBLIC SOURCES', sub: 'DNS / CT / BGP', primary: false },
+    { title: 'PUBLIC SOURCES', sub: 'DNS / CT / RDAP / HTTP', primary: false },
     { title: 'EVIDENCE', sub: 'Raw Telemetry', primary: false },
     { title: 'ASSETS', sub: 'Discovered Entities', primary: false },
     { title: 'CORRELATION', sub: 'Entity Graph', primary: false },

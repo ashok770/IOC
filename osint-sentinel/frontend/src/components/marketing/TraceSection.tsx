@@ -7,7 +7,7 @@ export const TraceSection: React.FC = () => {
       sourceTag: 'RFC 1035',
       title: 'Authoritative Zone Observations',
       description:
-        'A, AAAA, CNAME, MX, and TXT records expose apex domains, delegated mail handlers, verification records, and edge routing gateways.',
+        'A, AAAA, CNAME, MX, NS, SOA, and TXT records expose apex domains, delegated mail handlers, verification records, and edge routing gateways.',
       evidenceExample: 'dig +noall +answer IN A target.org',
     },
     {
@@ -15,40 +15,40 @@ export const TraceSection: React.FC = () => {
       sourceTag: 'RFC 6962',
       title: 'Public Cryptographic Logs',
       description:
-        'Append-only cryptographic CT logs record every issued TLS certificate, revealing subdomains, wildcard scopes, and CA signing authorities.',
+        'Append-only cryptographic CT logs record issued TLS certificates, revealing subdomains, Subject Alternative Names (SANs), and CA issuers.',
       evidenceExample: 'x509.SAN: api.internal.target.org',
     },
     {
-      category: 'EDGE & HTTP GATEWAYS',
-      sourceTag: 'HTTP/1.1 & H2',
-      title: 'Public Protocol Handshakes',
+      category: 'HTTP & WEB HEADERS',
+      sourceTag: 'RFC 9110 / HTTP',
+      title: 'Controlled Web-Root Observations',
       description:
-        'Standard TLS negotiations and HTTP responses broadcast server headers, security directives, reverse-proxy signatures, and TLS cipher suites.',
-      evidenceExample: 'Server: nginx/1.24 | HSTS: max-age=31536000',
+        'Passive web-root observation captures Server, X-Powered-By, Via, and Cloudflare headers to identify web servers, proxies, and meta generators without invasive probing.',
+      evidenceExample: 'Server: nginx/1.24 | X-Powered-By: Next.js',
     },
     {
-      category: 'ROUTING & AUTONOMOUS SYSTEMS',
-      sourceTag: 'BGP / RDAP',
-      title: 'IP Blocks & CIDR Delegations',
+      category: 'DOMAIN REGISTRATION & RDAP',
+      sourceTag: 'RFC 9082 / RDAP',
+      title: 'Registration Metadata & Status',
       description:
-        'Regional Internet Registries (RIRs) and BGP route announcements map IP ranges, autonomous system numbers (ASNs), and cloud allocations.',
-      evidenceExample: 'AS15169 | 198.51.100.0/24 Public CIDR',
+        'Registration authority queries discover registrar details, administrative lifecycle dates, expiration windows, and active domain status indicators.',
+      evidenceExample: 'Registrar: MarkMonitor | Status: clientTransferProhibited',
     },
     {
-      category: 'THIRD-PARTY INTEGRATIONS',
-      sourceTag: 'DOM & HEADERS',
-      title: 'External SaaS & Dependencies',
+      category: 'EXTERNAL DEPENDENCIES',
+      sourceTag: 'DNS & HEADERS',
+      title: 'Infrastructure & SaaS References',
       description:
-        'Client-side script includes, CSP policies, CDN endpoints, and auth callback URLs document downstream external supply-chain dependencies.',
-      evidenceExample: 'CSP: https://cdn.auth0.com https://sentry.io',
+        'Authoritative DNS CNAME pointers, nameservers, MX delegations, SPF includes, and public CDN indicators establish external dependency relationships.',
+      evidenceExample: 'CNAME: target.cdn.cloudflare.net | MX: aspmx.l.google.com',
     },
     {
       category: 'EXPOSURE SIGNALS',
-      sourceTag: 'SURFACE ANOMALY',
-      title: 'Public Interface Exposure',
+      sourceTag: 'DETERMINISTIC SIGNAL',
+      title: 'Factual Exposure Signals',
       description:
-        'Factual configuration anomalies, exposed administrative interfaces, deprecated TLS protocols, and misplaced origin endpoints.',
-      evidenceExample: 'SIGNAL: /metrics Prometheus endpoint public',
+        'Identifies observable conditions: remote access indicators, development/test hostnames, missing or permissive SPF/DMARC records, and expiring certificates.',
+      evidenceExample: 'SIGNAL: Missing DMARC record on apex domain',
     },
   ];
 
@@ -67,7 +67,7 @@ export const TraceSection: React.FC = () => {
                 backgroundColor: 'var(--ds-color-cobalt, #2563EB)',
               }}
             />
-            OBSERVABLE ATTACK SURFACE
+            PUBLICLY OBSERVABLE FOOTPRINT
           </div>
 
           <h2
@@ -93,7 +93,7 @@ export const TraceSection: React.FC = () => {
             }}
           >
             Public infrastructure produces observable traces across domains, DNS records,
-            certificates, hosts, technologies, dependencies, and other public sources.
+            certificates, hosts, technologies, dependencies, and registration sources.
             OSINT Sentinel captures these signals passively and deterministically.
           </p>
         </div>
